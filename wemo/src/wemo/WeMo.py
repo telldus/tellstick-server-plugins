@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from base import Plugin
+from base import Application, Plugin
 from telldus import DeviceManager, Device
-from ouimeaux.environment import Environment
 from threading import Thread
+import pywemo
 import logging
 
 class WeMoDevice(Device):
@@ -36,31 +36,25 @@ class WeMoSwitch(WeMoDevice):
 		return Device.TURNON | Device.TURNOFF
 
 class WeMoLight(Device):
-	def __init__(self, bridge, light):
+	def __init__(self, light):
 		super(WeMoLight,self).__init__()
-		self.bridge = bridge
 		self.light = light
-		self.attr = bridge.light_attributes(light)
-		self.setName(self.attr['name'])
+		self.setName(light.name)
 
 	def _command(self, action, value, success, failure, **kwargs):
 		if action == Device.TURNON:
-			dim = 255
-			state = 1
+			self.light.turn_on()
 		elif action == Device.TURNOFF:
-			dim = None
-			state = 0
+			self.light.turn_off()
 		elif action == Device.DIM:
-			dim = value
-			state = 1
+			self.light.turn_on(value)
 		else:
 			failure(0)
 			return
-		self.bridge.light_set_state(self.light,state=state,dim=dim)
 		success()
 
 	def localId(self):
-		return self.attr['devID']
+		return self.light.uniqueID
 
 	def typeString(self):
 		return 'wemo'
@@ -72,11 +66,6 @@ class WeMo(Plugin):
 	def __init__(self):
 		self.devices = {}
 		self.deviceManager = DeviceManager(self.context)
-		self.env = Environment(
-			switch_callback=self.switchFound,
-			motion_callback=self.motionFound,
-			bridge_callback=self.bridgeFound,
-		)
 		Thread(target=self.discover).start()
 
 	def addDevice(self, DeviceType, device):
@@ -90,15 +79,20 @@ class WeMo(Plugin):
 		if bridge.serialnumber in self.devices:
 			return
 		self.devices[bridge.serialnumber] = bridge
-		bridge.bridge_get_lights()
 		for light in bridge.Lights:
-			d = WeMoLight(bridge, bridge.Lights[light])
+			d = WeMoLight(bridge.Lights[light])
 			self.deviceManager.addDevice(d)
 
 	def discover(self):
-		self.env.start()
-		self.env.discover(seconds=5)
-		self.deviceManager.finishedLoading('wemo')
+		devices = pywemo.discover_devices()
+		for device in devices:
+			if isinstance(device, pywemo.Bridge):
+				Application().queue(self.bridgeFound, device)
+			elif isinstance(device, pywemo.Switch):
+				Application().queue(self.switchFound, device)
+			elif isinstance(device, pywemo.Motion):
+				Application().queue(self.motionFound, device)
+		Application().queue(self.deviceManager.finishedLoading, 'wemo')
 
 	def motionFound(self, motion):
 		logging.info("WeMo motion found: %s", motion)

@@ -14,5 +14,5 @@ setup(
 	entry_points={ \
 		'telldus.startup': ['c = wemo:WeMo [cREQ]']
 	},
-	extras_require = dict(cREQ = 'Base>=0.1\nTelldus>=0.1'),
+	extras_require = dict(cREQ = 'Base>=0.1\nTelldus>=0.1\npywemo'),
 )
