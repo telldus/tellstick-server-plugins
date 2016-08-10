@@ -13,13 +13,13 @@ class LifxDevice(Device):
 
 	def _command(self, action, value, success, failure, **kwargs):
 		if action == Device.TURNON:
-			self.light.power = True
 			self.light.brightness = 1
+			self.light.power = True
 		elif action == Device.TURNOFF:
 			self.light.power = False
 		elif action == Device.DIM:
-			self.light.power = True
 			self.light.brightness = value/255.0
+			self.light.power = True
 		else:
 			failure(0)
 			return
