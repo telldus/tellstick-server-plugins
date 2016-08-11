@@ -169,6 +169,9 @@ class Hue(Plugin):
 
 		if self.state == Hue.STATE_UNAUTHORIZED:
 			self.authorize()
+		elif self.state == Hue.STATE_NO_BRIDGE:
+			# If ssdp fails to detect, use the hue remote service
+			self.searchNupnp()
 		params = {'state':self.state}
 		return 'hue.html', params
 
@@ -190,6 +193,23 @@ class Hue(Plugin):
 				light.setType(lights[i]['type'])
 			self.deviceManager.addDevice(light)
 		self.deviceManager.finishedLoading('hue')
+
+	def searchNupnp(self):
+		conn = httplib.HTTPSConnection('www.meethue.com')
+		conn.request('GET', '/api/nupnp')
+		response = conn.getresponse()
+		try:
+			rawData = response.read()
+			data = json.loads(rawData)
+		except:
+			logging.warning("Could not parse JSON")
+			logging.warning("%s", rawData)
+			return
+		for bridge in data:
+			if 'internalipaddress' not in bridge:
+				continue
+			self.selectBridge(bridge['internalipaddress'])
+			return
 
 	def ssdpDeviceFound(self, device):
 		if self.state != Hue.STATE_NO_BRIDGE:
