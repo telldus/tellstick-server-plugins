@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from base import implements, Plugin, Settings
+from base import implements, Application, Plugin, Settings
 from web.base import IWebRequestHandler, WebResponseRedirect
 from pkg_resources import resource_filename
 from upnp import SSDP, ISSDPNotifier
@@ -100,7 +100,7 @@ class Hue(Plugin):
 		self.state = Hue.STATE_NO_BRIDGE
 		if not self.activated:
 			return
-		self.selectBridge(self.s['bridge'])
+		Application().queue(self.selectBridge, self.s['bridge'])
 
 	def authorize(self):
 		username = self.s['username']
