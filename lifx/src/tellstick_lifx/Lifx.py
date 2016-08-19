@@ -4,6 +4,7 @@ from base import Plugin, mainthread
 from telldus import DeviceManager, Device
 from threading import Timer
 import lifx
+import colorsys
 
 class LifxDevice(Device):
 	def __init__(self, light):
@@ -20,6 +21,13 @@ class LifxDevice(Device):
 		elif action == Device.DIM:
 			self.light.brightness = value/255.0
 			self.light.power = True
+		elif action == Device.RGBW:
+			r = (value >> 24) & 0xFF
+			g = (value >> 16) & 0xFF
+			b = (value >> 8) & 0xFF
+			(h, s, l) = colorsys.rgb_to_hsv(r/255.0, g/255.0, b/255.0)
+			self.light.color = lifx.color.modify_color(self.light.color, hue=h*360.0, saturation=s)
+			self.light.power = True
 		else:
 			failure(0)
 			return
@@ -32,7 +40,7 @@ class LifxDevice(Device):
 		return 'lifx'
 
 	def methods(self):
-		return Device.TURNON | Device.TURNOFF | Device.DIM
+		return Device.TURNON | Device.TURNOFF | Device.DIM | Device.RGBW
 
 class Lifx(Plugin):
 	def __init__(self):
