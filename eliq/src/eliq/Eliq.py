@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from base import Application, Plugin, Settings, implements
-from web.base import IWebRequestHandler
+from base import Application, Plugin, ConfigurationString, configuration
 from telldus import DeviceManager, Sensor
-from pkg_resources import resource_filename
 from urllib2 import HTTPError
 import eliqonline
 import logging
@@ -23,21 +21,27 @@ class EliqSensor(Sensor):
 	def typeString(self):
 		return 'eliq'
 
+@configuration(
+	accessToken = ConfigurationString(
+		defaultValue='',
+		title='Access token',
+		description='Genererate an access token in the Eliq online portal',
+		minLength=32,
+		maxLength=32
+	)
+)
 class Eliq(Plugin):
-	implements(IWebRequestHandler)
-
 	def __init__(self):
 		self.deviceManager = DeviceManager(self.context)
 		self.sensor = None
-		s = Settings('eliq')
-		self.accessToken = s.get('accessToken', '')
 		Application().registerScheduledTask(self.__requestNewValue, minutes=1, runAtOnce=True)
 
 	def __requestNewValue(self):
-		if self.accessToken == '':
+		accessToken = self.config('accessToken')
+		if accessToken == '':
 			return
 		try:
-			eliq = eliqonline.API(self.accessToken)
+			eliq = eliqonline.API(accessToken)
 			data_now = eliq.get_data_now()
 		except HTTPError as e:
 			# Something wrong with our request apparantly
@@ -50,21 +54,3 @@ class Eliq(Plugin):
 			self.deviceManager.finishedLoading('eliq')
 		else:
 			self.sensor.setSensorValue(Sensor.WATT, data_now.power, Sensor.SCALE_POWER_WATT)
-
-	def getTemplatesDirs(self):
-		return [resource_filename('eliq', 'templates')]
-
-	def matchRequest(self, plugin, path):
-		if plugin != 'eliq':
-			return False
-		if path in ['']:
-			return True
-		return False
-
-	def handleRequest(self, plugin, path, params, request, **kwargs):
-		if request.method() == 'POST':
-			self.accessToken = request.post('accessToken', '')
-			s = Settings('eliq')
-			s['accessToken'] = self.accessToken
-			Application().queue(self.__requestNewValue)
-		return 'eliq.html', {'accessToken': self.accessToken}
