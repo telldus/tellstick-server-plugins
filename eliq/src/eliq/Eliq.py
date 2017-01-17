@@ -47,6 +47,10 @@ class Eliq(Plugin):
 			# Something wrong with our request apparantly
 			logging.error('Could not request Eliq value %s', e)
 			return
+		except Exception as e:
+			# Something wrong with our request apparantly
+			logging.error('Could not request Eliq value %s', e)
+			return
 		if self.sensor is None:
 			self.sensor = EliqSensor(data_now.channelid)
 			self.sensor.setSensorValue(Sensor.WATT, data_now.power, Sensor.SCALE_POWER_WATT)
