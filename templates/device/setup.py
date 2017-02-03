@@ -8,7 +8,15 @@ except ImportError:
 
 setup(
 	name='Dummy device',
-	version='0.1',
+	version='1.0',
+	author='Alice',
+	author_email='alice@wonderland.lit',
+	color='#2c3e50',
+	description='Dummy template for implementings device plugins',
+	icon='dummy.png',
+	long_description="""
+		This plugin is used as a template when creating plugins that support new device types.
+	""",
 	packages=['dummy'],
 	package_dir = {'':'src'},
 	entry_points={ \
