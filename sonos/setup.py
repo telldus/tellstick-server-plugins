@@ -9,6 +9,11 @@ except ImportError:
 setup(
 	name='Sonos',
 	version='0.1',
+	description='Plugin that allows you to control Sonos speakers',
+	icon='icon.png',
+	color='#000000',
+	author='Micke Prag',
+	author_email='micke.prag@telldus.se',
 	packages=['sonos'],
 	entry_points={ \
 		'telldus.startup': ['c = sonos:Sonos [cREQ]']
