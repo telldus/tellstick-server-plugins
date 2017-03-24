@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from base import implements, Application, Plugin, Settings
-from web.base import IWebRequestHandler, WebResponseRedirect
+from base import implements, Application, Plugin, Settings, mainthread, configuration
+from web.base import IWebRequestHandler, Server, WebResponseJson
 from pkg_resources import resource_filename
 from upnp import SSDP, ISSDPNotifier
 from telldus import DeviceManager, Device, DeviceAbortException
+from telldus.web import IWebReactHandler, ConfigurationReactComponent
 import colorsys, logging
 import httplib, urlparse, json
+import threading
 
 class Bridge(object):
 	def __init__(self, config):
@@ -86,8 +88,14 @@ class Light(Device):
 	def setType(self, type):
 		self._type = type
 
+@configuration(
+	bridgeStatus = ConfigurationReactComponent(
+		component='hue',
+	)
+)
 class Hue(Plugin):
 	implements(IWebRequestHandler)
+	implements(IWebReactHandler)
 	implements(ISSDPNotifier)
 	STATE_NO_BRIDGE, STATE_UNAUTHORIZED, STATE_AUTHORIZED = range(3)
 
@@ -99,24 +107,29 @@ class Hue(Plugin):
 		self.activated = self.s.get('activated', False)
 		self.state = Hue.STATE_NO_BRIDGE
 		if not self.activated:
-			return
-		Application().queue(self.selectBridge, self.s['bridge'])
+			self.ssdp = SSDP(self.context)
+		else:
+			Application().queue(self.selectBridge, self.s['bridge'])
 
+	@mainthread
 	def authorize(self):
-		username = self.s['username']
-		if username is None:
-			self.state = Hue.STATE_UNAUTHORIZED
-			data = self.doCall('POST', '/api', '{"devicetype": "Telldus#TellStick ZNet"}')
+		username = self.s.get('username', '')
+		if username is None or username == '':
+			data = self.doCall('POST', '/api', '{"devicetype": "Telldus#TellStick"}')
 			resp = data[0]
 			if 'error' in resp and resp['error']['type'] == 101:
-				# Unauthorized, the user needs to press the button
+				# Unauthorized, the user needs to press the button. Try again in 5 seconds
+				t = threading.Timer(5.0, self.authorize)
+				t.name = 'Philips Hue authorization poll timer'
+				t.daemon = True
+				t.start()
 				return
 			if 'success' in resp:
 				self.username = resp['success']['username']
 				self.s['username'] = resp['success']['username']
 				self.activated = True
 				self.s['activated'] = True
-				self.state = Hue.STATE_AUTHORIZED
+				self.setState(Hue.STATE_AUTHORIZED)
 			else:
 				return
 		else:
@@ -124,15 +137,17 @@ class Hue(Plugin):
 		# Check if username is ok
 		data = self.doCall('GET', '/api/%s/lights' % self.username)
 		if 0 in data and 'error' in data[0]:
-			self.state = Hue.STATE_UNAUTHORIZED
-			self.username = None
+			self.setState(Hue.STATE_UNAUTHORIZED)
 			return
-		self.state = Hue.STATE_AUTHORIZED
+		self.setState(Hue.STATE_AUTHORIZED)
 		self.parseInitData(data)
 
 	def doCall(self, type, endpoint, body = ''):
 		conn = httplib.HTTPConnection(self.bridge)
-		conn.request(type, endpoint, body)
+		try:
+			conn.request(type, endpoint, body)
+		except:
+			return [{'error': 'Could not connect'}]
 		response = conn.getresponse()
 		try:
 			rawData = response.read()
@@ -140,40 +155,37 @@ class Hue(Plugin):
 		except:
 			logging.warning("Could not parse JSON")
 			logging.warning("%s", rawData)
-			return {0: {'error': 'Could not parse JSON'}}
+			return [{'error': 'Could not parse JSON'}]
 		return data
 
-	def getTemplatesDirs(self):
-		return [resource_filename('hue', 'templates')]
+	def getReactComponents(self):
+		return {
+			'hue': {
+				'title': 'Philips Hue',
+				'script': 'hue/hue.js',
+			}
+		}
 
 	def matchRequest(self, plugin, path):
 		if plugin != 'hue':
 			return False
-		if path == '':
+		if path in ['reset', 'state']:
 			return True
 		return False
 
 	def handleRequest(self, plugin, path, params, **kwargs):
-		if plugin != 'hue' or path != '':
+		if plugin != 'hue':
 			return None
-		if 'select' in params:
-			self.selectBridge(params['select'])
-			return WebResponseRedirect('/')
-		elif 'reset' in params:
-			self.state = Hue.STATE_NO_BRIDGE
-			self.s['bridge'] = ''
-			self.bridge = None
-			return WebResponseRedirect('/')
-		if not self.activated and self.ssdp is None:
-			self.ssdp = SSDP(self.context)
 
-		if self.state == Hue.STATE_UNAUTHORIZED:
-			self.authorize()
-		elif self.state == Hue.STATE_NO_BRIDGE:
-			# If ssdp fails to detect, use the hue remote service
-			self.searchNupnp()
-		params = {'state':self.state}
-		return 'hue.html', params
+		if path == 'state':
+			if self.state == Hue.STATE_NO_BRIDGE:
+				# If ssdp fails to detect, use the hue remote service
+				self.searchNupnp()
+			return WebResponseJson({'state': self.state})
+
+		if path == 'reset':
+			self.setState(Hue.STATE_NO_BRIDGE)
+			return WebResponseJson({'success': True})
 
 	def parseInitData(self, data):
 		lights = data
@@ -211,6 +223,22 @@ class Hue(Plugin):
 			self.selectBridge(bridge['internalipaddress'])
 			return
 
+	def setState(self, newState):
+		if newState == Hue.STATE_NO_BRIDGE:
+			self.bridge = None
+			self.username = None
+			self.activated = False
+			self.s['bridge'] = ''
+			self.s['activated'] = False
+			self.s['username'] = ''
+		elif newState == Hue.STATE_UNAUTHORIZED:
+			Application().queue(self.authorize)
+		elif newState == Hue.STATE_AUTHORIZED:
+			pass
+		self.state = newState
+		# Notify websocket
+		Server(self.context).webSocketSend('hue', 'status', {'state': self.state})
+
 	def ssdpDeviceFound(self, device):
 		if self.state != Hue.STATE_NO_BRIDGE:
 			return
@@ -220,9 +248,8 @@ class Hue(Plugin):
 
 	def selectBridge(self, urlbase):
 		if urlbase == '' or urlbase is None:
-			self.state = Hue.STATE_NO_BRIDGE
-			self.bridge = None
+			self.setState(Hue.STATE_NO_BRIDGE)
 			return
 		self.s['bridge'] = urlbase
 		self.bridge = urlbase
-		self.authorize()
+		self.setState(Hue.STATE_UNAUTHORIZED)
