@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from base import Application, Plugin, Settings, implements, mainthread
-from web.base import IWebRequestHandler, WebResponseRedirect, Server
+from base import Application, Plugin, implements, mainthread, configuration
+from web.base import IWebRequestHandler, WebResponseRedirect, WebResponseJson, Server
 from telldus import DeviceManager, Sensor
+from telldus.web import IWebReactHandler, ConfigurationReactComponent
 from threading import Thread
 from pkg_resources import resource_filename
 import rauth, json, time
@@ -16,14 +17,7 @@ class NetatmoModule(Sensor):
 		self.setName(name)
 
 	def battery(self):
-		if self.batteryLevel is None:
-			return None
-		# Ugly workaround until battery has been properly fixed...
-		class Object(object):
-			pass
-		battery = Object()
-		battery.level = self.batteryLevel
-		return battery
+		return self.batteryLevel
 
 	def localId(self):
 		return self._localId
@@ -34,13 +28,27 @@ class NetatmoModule(Sensor):
 	def typeString(self):
 		return 'netatmo'
 
+class NetatmoConfiguration(ConfigurationReactComponent):
+	def __init__(self):
+		super(NetatmoConfiguration,self).__init__(component='netatmo', defaultValue={}, readable=False)
+		self.activated = False
+
+	def serialize(self):
+		retval = super(NetatmoConfiguration,self).serialize()
+		retval['activated'] = self.activated
+		return retval
+
+@configuration(
+	oauth = NetatmoConfiguration()
+)
 class Netatmo(Plugin):
 	implements(IWebRequestHandler)
+	implements(IWebReactHandler)
 
 	supportedTypes = {
 		'Temperature': (Sensor.TEMPERATURE, Sensor.SCALE_TEMPERATURE_CELCIUS),
 		'Humidity': (Sensor.HUMIDITY, Sensor.SCALE_HUMIDITY_PERCENT),
-		'CO2': (Sensor.UNKNOWN, Sensor.SCALE_UNKNOWN),
+		#'CO2': (Sensor.UNKNOWN, Sensor.SCALE_UNKNOWN),
 		#'Noise':,
 		#'Pressure': (Sensor.BAROMETRIC_PRESSURE, Sensor.SCALE_UNKNOWN),
 		'Rain': (Sensor.RAINTOTAL, Sensor.SCALE_RAINTOTAL_MM),
@@ -59,49 +67,67 @@ class Netatmo(Plugin):
 	}
 
 	def __init__(self):
-		self.s = Settings('netatmo')
 		self.deviceManager = DeviceManager(self.context)
 		self.sensors = {}
 		self.loaded = False
 		self.clientId = ''
 		self.clientSecret = ''
-		self.accessToken = self.s.get('accessToken', '')
-		self.refreshToken = self.s.get('refreshToken', '')
-		self.tokenTTL = self.s.get('tokenTTL', 0)
+		config = self.config('oauth')
+		self.accessToken = config.get('accessToken', '')
+		self.refreshToken = config.get('refreshToken', '')
+		if self.accessToken is not '':
+			self.configuration['oauth'].activated = True
+		self.tokenTTL = config.get('tokenTTL', 0)
 		Application().registerScheduledTask(self.__requestNewValues, minutes=10, runAtOnce=True)
 
-	def getTemplatesDirs(self):
-		return [resource_filename('netatmo', 'templates')]
+	def getReactComponents(self):
+		return {
+			'netatmo': {
+				'title': 'Netatmo',
+				'script': 'netatmo/netatmo.js',
+			}
+		}
 
 	def matchRequest(self, plugin, path):
 		if plugin != 'netatmo':
 			return False
-		if path in ['', 'code']:
+		if path in ['activate', 'code', 'logout']:
 			return True
 		return False
 
 	def handleRequest(self, plugin, path, params, request, **kwargs):
 		# Web requests
-		if self.accessToken == '':
+		if path in ['activate', 'code']:
 			service = rauth.OAuth2Service(
 				client_id=self.clientId,
 				client_secret=self.clientSecret,
 				access_token_url='https://api.netatmo.net/oauth2/token',
 				authorize_url='https://api.netatmo.net/oauth2/authorize'
 			)
-			if path == '':
+			if path == 'activate':
 				params = {'redirect_uri': '%s/netatmo/code' % request.base(),
 				          'response_type': 'code'}
 				url = service.get_authorize_url(**params)
-				return WebResponseRedirect(url)
-			elif path == 'code':
+				return WebResponseJson({'url': url})
+			if path == 'code':
 				data = {'code': params['code'],
 				        'grant_type': 'authorization_code',
 				        'redirect_uri': '%s/netatmo/code' % request.base()
 				}
 				session = service.get_auth_session(data=data, decoder=self.__decodeAccessToken)
-			return WebResponseRedirect('/')
-		return 'netatmo.html', {}
+				return WebResponseRedirect('%s/plugins?settings=netatmo' % request.base())
+		if path == 'logout':
+			self.accessToken = ''
+			self.refreshToken = ''
+			self.tokenTTL = 0
+			self.setConfig('oauth', {
+				'accessToken': self.accessToken,
+				'refreshToken': self.refreshToken,
+				'tokenTTL': self.tokenTTL,
+			})
+			self.configuration['oauth'].activated = False
+			return WebResponseJson({'success': True})
+		return None
 
 	def __addUpdateDevice(self, data):
 		if data['_id'] not in self.sensors:
@@ -173,7 +199,10 @@ class Netatmo(Plugin):
 		self.accessToken = response['access_token']
 		self.refreshToken = response['refresh_token']
 		self.tokenTTL = int(time.time()) + response['expires_in']
-		self.s['accessToken'] = self.accessToken
-		self.s['refreshToken'] = self.refreshToken
-		self.s['tokenTTL'] = self.tokenTTL
+		self.setConfig('oauth', {
+			'accessToken': self.accessToken,
+			'refreshToken': self.refreshToken,
+			'tokenTTL': self.tokenTTL,
+		})
+		self.configuration['oauth'].activated = True
 		return response
