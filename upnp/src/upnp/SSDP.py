@@ -5,7 +5,7 @@ import httplib
 import StringIO
 from Device import Device
 from threading import Thread
-from base import ObserverCollection, IInterface, Plugin, mainthread
+from base import ObserverCollection, IInterface, Application, Plugin, mainthread
 import logging
 
 class ISSDPNotifier(IInterface):
@@ -51,7 +51,12 @@ class SSDP(Plugin):
 	def __init__(self):
 		self.rootDevices = {}
 		self.devices = {}
-		Thread(target=self.discover).start()
+		Application().registerScheduledTask(fn=self.startDiscover, minutes=10, runAtOnce=True)
+
+	def startDiscover(self):
+		t = Thread(target=self.discover, name='SSDP discoverer')
+		t.daemon = True
+		t.start()
 
 	def discover(self):
 		service = "ssdp:all"
