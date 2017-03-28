@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from base import implements, Application, Plugin, Settings, mainthread, configuration
+from base import implements, Application, Plugin, mainthread, configuration
 from web.base import IWebRequestHandler, Server, WebResponseJson
 from pkg_resources import resource_filename
 from upnp import SSDP, ISSDPNotifier
@@ -89,7 +89,7 @@ class Light(Device):
 		self._type = type
 
 @configuration(
-	bridgeStatus = ConfigurationReactComponent(
+	bridge = ConfigurationReactComponent(
 		component='hue',
 		defaultValue={},
 	)
@@ -102,20 +102,21 @@ class Hue(Plugin):
 
 	def __init__(self):
 		self.deviceManager = DeviceManager(self.context)
-		self.s = Settings('philips.hue')
 		self.username = None
 		self.ssdp = None
-		self.activated = self.s.get('activated', False)
+		config = self.config('bridge')
+		self.activated = config.get('activated', False)
+		self.username = config.get('username', '')
+		self.bridge = config.get('bridge', '')
 		self.state = Hue.STATE_NO_BRIDGE
 		if not self.activated:
 			self.ssdp = SSDP(self.context)
 		else:
-			Application().queue(self.selectBridge, self.s['bridge'])
+			Application().queue(self.selectBridge, config.get('bridge'))
 
 	@mainthread
 	def authorize(self):
-		username = self.s.get('username', '')
-		if username is None or username == '':
+		if self.username is None or self.username == '':
 			data = self.doCall('POST', '/api', '{"devicetype": "Telldus#TellStick"}')
 			resp = data[0]
 			if 'error' in resp and resp['error']['type'] == 101:
@@ -127,14 +128,11 @@ class Hue(Plugin):
 				return
 			if 'success' in resp:
 				self.username = resp['success']['username']
-				self.s['username'] = resp['success']['username']
 				self.activated = True
-				self.s['activated'] = True
+				self.saveConfig()
 				self.setState(Hue.STATE_AUTHORIZED)
 			else:
 				return
-		else:
-			self.username = username
 		# Check if username is ok
 		data = self.doCall('GET', '/api/%s/lights' % self.username)
 		if 0 in data and 'error' in data[0]:
@@ -207,6 +205,13 @@ class Hue(Plugin):
 			self.deviceManager.addDevice(light)
 		self.deviceManager.finishedLoading('hue')
 
+	def saveConfig(self):
+		self.setConfig('bridge', {
+			'bridge': self.bridge,
+			'username': self.username,
+			'activated': self.activated,
+		})
+
 	def searchNupnp(self):
 		conn = httplib.HTTPSConnection('www.meethue.com')
 		conn.request('GET', '/api/nupnp')
@@ -229,9 +234,7 @@ class Hue(Plugin):
 			self.bridge = None
 			self.username = None
 			self.activated = False
-			self.s['bridge'] = ''
-			self.s['activated'] = False
-			self.s['username'] = ''
+			self.saveConfig()
 		elif newState == Hue.STATE_UNAUTHORIZED:
 			Application().queue(self.authorize)
 		elif newState == Hue.STATE_AUTHORIZED:
@@ -251,6 +254,6 @@ class Hue(Plugin):
 		if urlbase == '' or urlbase is None:
 			self.setState(Hue.STATE_NO_BRIDGE)
 			return
-		self.s['bridge'] = urlbase
 		self.bridge = urlbase
+		self.saveConfig()
 		self.setState(Hue.STATE_UNAUTHORIZED)
