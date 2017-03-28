@@ -91,6 +91,7 @@ class Light(Device):
 @configuration(
 	bridgeStatus = ConfigurationReactComponent(
 		component='hue',
+		defaultValue={},
 	)
 )
 class Hue(Plugin):
