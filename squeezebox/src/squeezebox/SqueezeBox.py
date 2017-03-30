@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from base import Plugin
+from base import Plugin, configuration, ConfigurationString
 from telldus import DeviceManager, Device
 from pylms.server import Server
 import logging
@@ -35,10 +35,29 @@ class Player(Device):
 	def methods(self):
 		return Device.TURNON | Device.TURNOFF
 
+@configuration(
+	hostname = ConfigurationString(
+		defaultValue='',
+		title='IP address',
+		description='The ip address to the Squeezebox server',
+	)
+)
 class SqueezeBox(Plugin):
 	def __init__(self):
 		self.deviceManager = DeviceManager(self.context)
-		self.sc = Server(hostname='192.168.0.3')
+		self.loaded = False
+		if self.config('hostname') != '':
+			self.setHostname(self.config('hostname'))
+
+	def configWasUpdated(self, key, value):
+		if key == 'hostname':
+			self.setHostname(value)
+
+	def setHostname(self, hostname):
+		if self.loaded:
+			logging.warning('Cannot change hostname, without a restart')
+			return
+		self.sc = Server(hostname=hostname)
 		try:
 			self.sc.connect()
 		except:
@@ -47,3 +66,4 @@ class SqueezeBox(Plugin):
 		for player in self.sc.players:
 			self.deviceManager.addDevice(Player(player))
 		self.deviceManager.finishedLoading('squeezebox')
+		self.loaded = True

@@ -8,7 +8,12 @@ except ImportError:
 
 setup(
 	name='SqueezeBox',
-	version='0.1',
+	version='1.0',
+	color='#2baaa6',
+	icon='squeezebox.png',
+	author='Micke Prag',
+	author_email='micke.prag@telldus.se',
+	description='Plugin to control Logitech Squeezebox from TellStick',
 	packages=['squeezebox'],
 	package_dir = {'':'src'},
 	entry_points={ \
