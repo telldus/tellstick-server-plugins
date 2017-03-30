@@ -11,7 +11,8 @@ class TPLinkDevice(Device):
 	def __init__(self, plug):
 		super(TPLinkDevice,self).__init__()
 		self.plug = plug
-		self.setName(plug.get_sysinfo()['alias'])
+		self.sysinfo = plug.get_sysinfo()
+		self.setName(self.sysinfo['alias'])
 
 	def _command(self, action, value, success, failure, **kwargs):
 		if action == Device.TURNON:
@@ -30,8 +31,7 @@ class TPLinkDevice(Device):
 		success()
 
 	def localId(self):
-		sysinfo = self.plug.get_sysinfo()
-		return sysinfo['deviceId']
+		return self.sysinfo['deviceId']
 
 	def typeString(self):
 		return 'tplink'
