@@ -19,7 +19,7 @@ class buildweb(bdist_egg):
 		bdist_egg.run(self)
 
 setup(
-	name='Netatmo',
+	name='Netatmo Weather',
 	version='1.0',
 	author='Telldus Technologies AB',
 	author_email='info.tech@telldus.se',
