@@ -14,6 +14,7 @@ setup(
 	color='#1597f1',
 	author='Micke Prag',
 	author_email='micke.prag@telldus.se',
+	category='notifications',
 	packages=['pushover'],
 	entry_points={ \
 		'telldus.plugins': ['c = pushover:Client [cREQ]']

@@ -11,6 +11,7 @@ setup(
 	version='0.1',
 	author='Micke Prag',
 	author_email='micke.prag@telldus.se',
+	category='appliances',
 	packages=['tellstick_lifx'],
 	package_dir = {'':'src'},
 	entry_points={ \

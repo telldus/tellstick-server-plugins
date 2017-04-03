@@ -23,6 +23,7 @@ setup(
 	version='1.0',
 	author='Telldus Technologies AB',
 	author_email='info.tech@telldus.se',
+	category='weather',
 	description='Use Netatmo weather station in Telldus Live!',
 	long_description="""
 		Use this plugin to collect weatherdata from your Netatmo weather station

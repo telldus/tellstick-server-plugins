@@ -17,6 +17,7 @@ Only reading status is currently supported. Setting the armstate is currently no
 	color='#c3c6c8',
 	author='Micke Prag',
 	author_email='micke.prag@gmail.com',
+	category='security',
 	packages=['tellstick_verisure'],
 	entry_points={ \
 		'telldus.startup': ['c = tellstick_verisure:Alarm [cREQ]']

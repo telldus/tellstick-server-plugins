@@ -14,6 +14,7 @@ setup(
 	color='#000000',
 	author='Micke Prag',
 	author_email='micke.prag@telldus.se',
+	category='multimedia',
 	packages=['sonos'],
 	entry_points={ \
 		'telldus.startup': ['c = sonos:Sonos [cREQ]']

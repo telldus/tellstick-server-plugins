@@ -13,6 +13,7 @@ setup(
 	icon='squeezebox.png',
 	author='Micke Prag',
 	author_email='micke.prag@telldus.se',
+	category='multimedia',
 	description='Plugin to control Logitech Squeezebox from TellStick',
 	long_description="""
 		Use this plugin to control your Squeezebox fom TellStick.

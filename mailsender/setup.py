@@ -12,6 +12,7 @@ setup(
 	icon='email.png',
 	author='Telldus Technologies',
 	author_email='info.tech@telldus.se',
+	category='notifications',
 	color='#000000',
 	description='Send emails from lua scripts',
 	long_description="""

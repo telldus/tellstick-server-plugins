@@ -23,6 +23,7 @@ setup(
 	version='1.0',
 	author='Telldus Technologies AB',
 	author_email='info.tech@telldus.se',
+	category='appliances',
 	description='Control Philips Hue lights',
 	packages=['hue'],
 	package_dir = {'':'src'},

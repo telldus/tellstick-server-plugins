@@ -13,6 +13,7 @@ setup(
 	icon='yr-logo.png',
 	author='Micke Prag',
 	author_email='micke.prag@telldus.se',
+	category='weather',
 	description='Import weatherdata from the current location from yr.no',
 	long_description="""
 		Use this plugin to collect weatherdata from the current location from yr.no.

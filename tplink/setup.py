@@ -11,6 +11,7 @@ setup(
 	version='1.0',
 	author='Fredrik Gullberg',
 	author_email='fredrik.gullberg@telldus.se',
+	category='appliances',
 	color='#2ecfda',
 	description='Plugin that allows you to control TP-Link HS100/HS110',
 	long_description="""

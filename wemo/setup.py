@@ -14,6 +14,7 @@ setup(
 	color='#94e05c',
 	author='Micke Prag',
 	author_email='micke.prag@telldus.se',
+	category='appliances',
 	packages=['wemo'],
 	package_dir = {'':'src'},
 	entry_points={ \
