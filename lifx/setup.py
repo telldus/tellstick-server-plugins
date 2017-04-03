@@ -7,8 +7,11 @@ except ImportError:
 	from distutils.core import setup
 
 setup(
-	name='TellStick Lifx',
-	version='0.1',
+	name='Lifx',
+	description='Plugin that allows you to control Lifx bulbs',
+	version='1.0',
+	icon='icon.png',
+	color='#440099',
 	author='Micke Prag',
 	author_email='micke.prag@telldus.se',
 	category='appliances',
