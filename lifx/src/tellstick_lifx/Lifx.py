@@ -51,6 +51,9 @@ class Lifx(Plugin):
 	@mainthread
 	def discover(self):
 		for light in self.lifxClient.get_devices():
-			d = LifxDevice(light)
+			try:
+				d = LifxDevice(light)
+			except Exception:
+				continue
 			self.deviceManager.addDevice(d)
 		self.deviceManager.finishedLoading('lifx')
