@@ -15,17 +15,19 @@ setup(
 	category='notifications',
 	color='#000000',
 	description='Send emails from lua scripts',
-	long_description="""
-		Use this plugin to add support for sending emails through Lua scripts.
-		You need to supply your own smtp-server.
-		Example to send an email from Lua:
-		local smtp = require "mailsender.SMTP"
-		smtp:send{
-			receiver='email@example.com',
-			msg='Hello from lua',
-			subject='Lua mailer'
-		}
-	""",
+	long_description="""Use this plugin to add support for sending emails through Lua scripts.  
+You need to supply your own smtp-server.
+
+Example to send an email from Lua:
+```lua
+local smtp = require "mailsender.SMTP"
+smtp:send{
+	receiver='email@example.com',
+	msg='Hello from lua',
+	subject='Lua mailer'
+}
+```
+""",
 	packages=['mailsender'],
 	entry_points={ \
 		'telldus.plugins': ['c = mailsender:SMTP [cREQ]']
