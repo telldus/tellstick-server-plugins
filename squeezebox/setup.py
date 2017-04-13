@@ -14,6 +14,10 @@ setup(
 	author='Micke Prag',
 	author_email='micke.prag@telldus.se',
 	description='Plugin to control Logitech Squeezebox from TellStick',
+	long_description="""
+		Use this plugin to control your Squeezebox fom TellStick.
+		You'll need to supply the IP for your Squeezebox server in the settings for the plugin.
+	""",
 	packages=['squeezebox'],
 	package_dir = {'':'src'},
 	entry_points={ \
