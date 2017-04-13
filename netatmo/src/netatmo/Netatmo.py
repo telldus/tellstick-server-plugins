@@ -50,7 +50,7 @@ class Netatmo(Plugin):
 		'Humidity': (Sensor.HUMIDITY, Sensor.SCALE_HUMIDITY_PERCENT),
 		#'CO2': (Sensor.UNKNOWN, Sensor.SCALE_UNKNOWN),
 		#'Noise':,
-		#'Pressure': (Sensor.BAROMETRIC_PRESSURE, Sensor.SCALE_UNKNOWN),
+		'Pressure': (Sensor.BAROMETRIC_PRESSURE, Sensor.SCALE_BAROMETRIC_PRESSURE_KPA),
 		'Rain': (Sensor.RAINRATE, Sensor.SCALE_RAINRATE_MMH),
 		'sum_rain_24': (Sensor.RAINTOTAL, Sensor.SCALE_RAINTOTAL_MM),
 		'WindAngle': (Sensor.WINDDIRECTION, Sensor.SCALE_WIND_DIRECTION),
@@ -144,6 +144,8 @@ class Netatmo(Plugin):
 			value = data['dashboard_data'][dataType]
 			if dataType == 'WindStrength' or dataType == 'GustStrength':
 				value = round(value / 3.6, 2)  # Data is reported in km/h, we want m/s
+			elif dataType == 'Pressure':
+				value = round(value/10.0)  # Data is reported in mbar, we want kPa
 			sensor.setSensorValue(valueType, value, scale)
 		if 'battery_vp' in data and data['type'] in Netatmo.products:
 			product = Netatmo.products[data['type']]
