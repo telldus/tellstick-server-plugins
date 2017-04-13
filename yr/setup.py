@@ -14,6 +14,11 @@ setup(
 	author='Micke Prag',
 	author_email='micke.prag@telldus.se',
 	description='Import weatherdata from the current location from yr.no',
+	long_description="""
+		Use this plugin to collect weatherdata from the current location from yr.no.
+		Data is imported once per hour.
+		Make sure that you have set the coordinates for your TellStick.
+	""",
 	packages=['yrno'],
 	entry_points={ \
 		'telldus.startup': ['c = yrno:Weather [cREQ]']
