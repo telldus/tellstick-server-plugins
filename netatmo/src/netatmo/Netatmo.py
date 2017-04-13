@@ -51,7 +51,7 @@ class Netatmo(Plugin):
 		#'CO2': (Sensor.UNKNOWN, Sensor.SCALE_UNKNOWN),
 		#'Noise':,
 		#'Pressure': (Sensor.BAROMETRIC_PRESSURE, Sensor.SCALE_UNKNOWN),
-		'Rain': (Sensor.RAINTOTAL, Sensor.SCALE_RAINTOTAL_MM),
+		'Rain': (Sensor.RAINRATE, Sensor.SCALE_RAINRATE_MMH),
 		'WindAngle': (Sensor.WINDDIRECTION, Sensor.SCALE_WIND_DIRECTION),
 		'WindStrength': (Sensor.WINDAVERAGE, Sensor.SCALE_WIND_VELOCITY_MS),
 		'GustStrength': (Sensor.WINDGUST, Sensor.SCALE_WIND_VELOCITY_MS),
