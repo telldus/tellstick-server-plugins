@@ -9,6 +9,12 @@ except ImportError:
 setup(
 	name='Eliq',
 	description='Import Eliq energy data into Telldus Live!',
+	long_description="""
+		Use this plugin to import your power consumption from Eliq.
+		You will need to provice an access token in the settings.
+		You can find this token at [my.eliq](https://my.eliq.io),
+		activate Plus and then go to API.
+	""",
 	version='1.0',
 	icon='eliq_logo.png',
 	color='#51b607',
