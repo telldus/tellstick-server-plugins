@@ -13,6 +13,10 @@ setup(
 	author_email='fredrik.gullberg@telldus.se',
 	color='#2ecfda',
 	description='Plugin that allows you to control TP-Link HS100/HS110',
+	long_description="""
+		Use this plugin to control your TP-Link HS100/HS110 devices.
+		All devices will be imported at startup.
+	""",
 	icon='tplink.png',
 	long_description="",
 	packages=['tplink'],
