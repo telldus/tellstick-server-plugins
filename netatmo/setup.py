@@ -24,6 +24,11 @@ setup(
 	author='Telldus Technologies AB',
 	author_email='info.tech@telldus.se',
 	description='Use Netatmo weather station in Telldus Live!',
+	long_description="""
+		Use this plugin to collect weatherdata from your Netatmo weather station
+		Data is imported every 10 minutes.
+		You'll need to connect your Netatmo accout in the settings for the plugin.
+	""",
 	icon='netatmo-weather.png',
 	color='#388cbf',
 	packages=['netatmo'],
