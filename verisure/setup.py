@@ -8,7 +8,7 @@ except ImportError:
 
 setup(
 	name='Verisure',
-	version='1.0',
+	version='1.1',
 	description='Plugin to read status from a Verisure Alarm',
 	long_description="""This software is not affiliated with Verisure Holding AB and the developers take no legal responsibility for the functionality or security of your Verisure Alarms and devices.
 
