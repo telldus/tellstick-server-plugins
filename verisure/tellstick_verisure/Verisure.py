@@ -147,6 +147,31 @@ class SmartPlugDevice(VerisureDevice):
 			return
 		self.setState(states[newStatus])
 
+class DoorLockDevice(VerisureDevice):
+	def __init__(self, info):
+		super(DoorLockDevice,self).__init__()
+		self.info = info
+		self.setName(info['area'])
+
+	def localId(self):
+		return self.info['deviceLabel']
+
+	def updateStatus(self, info):
+		if info['eventTime'] == self.lastChanged:
+			return
+		newStatus = info['currentLockState']
+		states = {
+			'LOCKED': Device.TURNON,
+			'UNLOCKED': Device.TURNOFF,
+		}
+		if newStatus not in states:
+			logging.warning("Unknown state %s", newStatus)
+			return
+		state, stateValue = self.state()
+		self.lastChanged = info['eventTime']
+		self.setState(states[newStatus], origin='%s by %s' % (info.get('userString', 'unknown'), info['method'].lower()))
+		return True
+
 @configuration(
 	username = ConfigurationString(
 		defaultValue='',
@@ -235,6 +260,17 @@ class Alarm(Plugin):
 				else:
 					device = self.devices[deviceLabel]
 				device.updateValues(plug)
+
+			# Door locks
+			for lock in overview.get('doorLockStatusList', []):
+				deviceLabel = lock['deviceLabel']
+				if deviceLabel not in self.devices:
+					device = DoorLockDevice(lock)
+					self.devices[deviceLabel] = device
+					deviceManager.addDevice(device)
+				else:
+					device = self.devices[deviceLabel]
+				device.updateStatus(lock)
 
 			if self.loaded == False:
 				deviceManager.finishedLoading('verisure')
