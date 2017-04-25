@@ -39,6 +39,9 @@ class AlarmDevice(VerisureDevice):
 	def localId(self):
 		return 0
 
+	def model(self):
+		return 'mainunit'
+
 	def updateStatus(self, armstate):
 		if armstate['date'] == self.lastChanged:
 			return False
@@ -65,6 +68,9 @@ class DoorWindowDevice(VerisureDevice):
 
 	def localId(self):
 		return self.info['deviceLabel']
+
+	def model(self):
+		return 'doorwindow'
 
 	def updateStatus(self, info):
 		if info['reportTime'] == self.lastChanged:
@@ -132,6 +138,9 @@ class SmartPlugDevice(VerisureDevice):
 	def methods(self):
 		return Device.TURNON | Device.TURNOFF
 
+	def model(self):
+		return 'smartplug'
+
 	def updateValues(self, info):
 		newStatus = info['currentState']
 		states = {
@@ -155,6 +164,9 @@ class DoorLockDevice(VerisureDevice):
 
 	def localId(self):
 		return self.info['deviceLabel']
+
+	def model(self):
+		return 'doorlock'
 
 	def updateStatus(self, info):
 		if info['eventTime'] == self.lastChanged:
