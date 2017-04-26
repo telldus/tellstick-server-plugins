@@ -43,6 +43,9 @@ class AlarmDevice(VerisureDevice):
 		return 'mainunit'
 
 	def updateStatus(self, armstate):
+		if 'date' not in armstate:
+			# If the user only have a lock and no actual alarm them most of the fields are missing
+			return False
 		if armstate['date'] == self.lastChanged:
 			return False
 		newStatus = armstate['statusType']
