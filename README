@@ -1,5 +1,2 @@
-To install a plugin, go to the plugin subdir and call:
-PYTHONUSERBASE="../plugins/" python setup.py develop --user
-
-Build the documentation:
-sphinx-build -b html -d build/doctrees   docs build/html
+To create and install plugins, please see the documentation here:
+http://tellstick-server.readthedocs.io/en/latest/python.html
