@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
 
+import colorsys
+import httplib
+import json
+import logging
+import threading
+import urlparse
+
 from base import implements, Application, Plugin, mainthread, configuration
 from web.base import IWebRequestHandler, Server, WebResponseJson
-from pkg_resources import resource_filename
 from upnp import SSDP, ISSDPNotifier
-from telldus import DeviceManager, Device, DeviceAbortException
+from telldus import DeviceManager, Device
 from telldus.web import IWebReactHandler, ConfigurationReactComponent
-import colorsys, logging
-import httplib, urlparse, json
-import threading
 
-class Bridge(object):
-	def __init__(self, config):
-		pass
 
 class Light(Device):
 	def __init__(self, nodeId, bridge):
-		super(Light,self).__init__()
+		super(Light, self).__init__()
 		self._nodeId = nodeId
 		self._bridge = bridge
 		self._type = 'unknown'
 
-	def _command(self, action, value, success, failure, **kwargs):
+	def _command(self, action, value, success, failure, **__kwargs):
 		if action == Device.TURNON:
 			msg = '{"on": true, "bri": 254}'
 		elif action == Device.TURNOFF:
@@ -30,31 +30,35 @@ class Light(Device):
 			msg = '{"on": true, "bri": %s}' % value
 		elif action == Device.RGBW:
 			value = int(value, 16)
-			r = (value >> 24) & 0xFF
-			g = (value >> 16) & 0xFF
-			b = (value >> 8) & 0xFF
-			h, s, v = colorsys.rgb_to_hsv(r, g, b)
-			msg = '{"on": true, "hue": %i, "sat": %i}' % (h*65535, s*254)
+			red = (value >> 24) & 0xFF
+			green = (value >> 16) & 0xFF
+			blue = (value >> 8) & 0xFF
+			hue, saturation, value = colorsys.rgb_to_hsv(red, green, blue)
+			msg = '{"on": true, "hue": %i, "sat": %i}' % (hue*65535, saturation*254)
 		else:
 			failure(0)
 			return
-		retval = self._bridge.doCall('PUT', '/api/%s/lights/%s/state' % (self._bridge.username, self._nodeId), msg)
+		retval = self._bridge.doCall(
+			'PUT',
+			'/api/%s/lights/%s/state' % (self._bridge.username, self._nodeId),
+			msg
+		)
 		if len(retval) == 0 or 'success' not in retval[0]:
 			failure(0)
 			return
 		state = 0
 		value = None
-		for v in retval:
-			if 'success' not in v:
+		for value in retval:
+			if 'success' not in value:
 				continue
-			s = v['success']
-			if '/lights/%s/state/on' % self._nodeId in s:
-				on = s['/lights/%s/state/on' % self._nodeId]
-				if on == False:
+			successData = value['success']
+			if '/lights/%s/state/on' % self._nodeId in successData:
+				isOn = successData['/lights/%s/state/on' % self._nodeId]
+				if isOn is False:
 					state = Device.TURNOFF
 					break
-			elif '/lights/%s/state/bri' % self._nodeId in s:
-				bri = s['/lights/%s/state/bri' % self._nodeId]
+			elif '/lights/%s/state/bri' % self._nodeId in successData:
+				bri = successData['/lights/%s/state/bri' % self._nodeId]
 				if bri == 254:
 					state = Device.TURNON
 					break
@@ -68,13 +72,13 @@ class Light(Device):
 	def localId(self):
 		return self._nodeId
 
-	def typeString(self):
+	def typeString(self):  # pylint: disable=R0201
 		return 'hue'
 
-	def isDevice(self):
+	def isDevice(self):  # pylint: disable=R0201
 		return True
 
-	def isSensor(self):
+	def isSensor(self):  # pylint: disable=R0201
 		return False
 
 	def methods(self):
@@ -85,11 +89,11 @@ class Light(Device):
 		# Unknown type
 		return Device.TURNON | Device.TURNOFF | Device.DIM
 
-	def setType(self, type):
-		self._type = type
+	def setType(self, newType):
+		self._type = newType
 
 @configuration(
-	bridge = ConfigurationReactComponent(
+	bridge=ConfigurationReactComponent(
 		component='hue',
 		defaultValue={},
 	)
@@ -119,12 +123,12 @@ class Hue(Plugin):
 		if self.username is None or self.username == '':
 			data = self.doCall('POST', '/api', '{"devicetype": "Telldus#TellStick"}')
 			resp = data[0]
-			if 'error' in resp and resp['error']['type'] == 101:
+			if resp.get('error', {}).get('type', None) == 101:
 				# Unauthorized, the user needs to press the button. Try again in 5 seconds
-				t = threading.Timer(5.0, self.authorize)
-				t.name = 'Philips Hue authorization poll timer'
-				t.daemon = True
-				t.start()
+				thread = threading.Timer(5.0, self.authorize)
+				thread.name = 'Philips Hue authorization poll timer'
+				thread.daemon = True
+				thread.start()
 				return
 			if 'success' in resp:
 				self.username = resp['success']['username']
@@ -141,23 +145,23 @@ class Hue(Plugin):
 		self.setState(Hue.STATE_AUTHORIZED)
 		self.parseInitData(data)
 
-	def doCall(self, type, endpoint, body = ''):
+	def doCall(self, requestType, endpoint, body=''):
 		conn = httplib.HTTPConnection(self.bridge)
 		try:
-			conn.request(type, endpoint, body)
-		except:
+			conn.request(requestType, endpoint, body)
+		except Exception:
 			return [{'error': 'Could not connect'}]
 		response = conn.getresponse()
 		try:
 			rawData = response.read()
 			data = json.loads(rawData)
-		except:
+		except Exception:
 			logging.warning("Could not parse JSON")
 			logging.warning("%s", rawData)
 			return [{'error': 'Could not parse JSON'}]
 		return data
 
-	def getReactComponents(self):
+	def getReactComponents(self):  # pylint: disable=R0201
 		return {
 			'hue': {
 				'title': 'Philips Hue',
@@ -165,14 +169,14 @@ class Hue(Plugin):
 			}
 		}
 
-	def matchRequest(self, plugin, path):
+	def matchRequest(self, plugin, path):  # pylint: disable=R0201
 		if plugin != 'hue':
 			return False
 		if path in ['reset', 'state']:
 			return True
 		return False
 
-	def handleRequest(self, plugin, path, params, **kwargs):
+	def handleRequest(self, plugin, path, __params, **__kwargs):
 		if plugin != 'hue':
 			return None
 
@@ -194,7 +198,7 @@ class Hue(Plugin):
 				light.setName(lights[i]['name'])
 			if 'state' in lights[i]:
 				state = lights[i]['state']
-				if state['on'] == False:
+				if state['on'] is False:
 					light.setState(Device.TURNOFF)
 				elif state['bri'] == 254:
 					light.setState(Device.TURNON)
@@ -219,7 +223,7 @@ class Hue(Plugin):
 		try:
 			rawData = response.read()
 			data = json.loads(rawData)
-		except:
+		except Exception:
 			logging.warning("Could not parse JSON")
 			logging.warning("%s", rawData)
 			return
