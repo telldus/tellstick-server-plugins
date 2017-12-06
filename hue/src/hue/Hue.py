@@ -13,10 +13,10 @@ from upnp import SSDP, ISSDPNotifier
 from telldus import DeviceManager, Device
 from telldus.web import IWebReactHandler, ConfigurationReactComponent
 
-
 class Light(Device):
-	def __init__(self, nodeId, bridge):
+	def __init__(self, uniqueId, nodeId, bridge):
 		super(Light, self).__init__()
+		self._uniqueId = uniqueId
 		self._nodeId = nodeId
 		self._bridge = bridge
 		self._type = 'unknown'
@@ -70,7 +70,7 @@ class Light(Device):
 		success()
 
 	def localId(self):
-		return self._nodeId
+		return self._uniqueId
 
 	def typeString(self):  # pylint: disable=R0201
 		return 'hue'
@@ -193,7 +193,10 @@ class Hue(Plugin):
 	def parseInitData(self, data):
 		lights = data
 		for i in lights:
-			light = Light(i, self)
+			if 'uniqueid' not in lightData:
+				continue
+			lightId = lightData['uniqueid']
+			light = Light(lightId, i, self)
 			if 'name' in lights[i]:
 				light.setName(lights[i]['name'])
 			if 'state' in lights[i]:
