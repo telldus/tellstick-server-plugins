@@ -264,3 +264,6 @@ class Hue(Plugin):
 		self.bridge = urlbase
 		self.saveConfig()
 		self.setState(Hue.STATE_UNAUTHORIZED)
+
+	def tearDown(self):
+		self.deviceManager.removeDevicesByType('hue')
