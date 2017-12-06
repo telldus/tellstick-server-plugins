@@ -113,10 +113,12 @@ class Hue(Plugin):
 		self.username = config.get('username', '')
 		self.bridge = config.get('bridge', '')
 		self.state = Hue.STATE_NO_BRIDGE
+		self.lights = {}
 		if not self.activated:
 			self.ssdp = SSDP(self.context)
 		else:
 			Application().queue(self.selectBridge, config.get('bridge'))
+		Application().registerScheduledTask(self.update, minutes=1)
 
 	@mainthread
 	def authorize(self):
@@ -191,26 +193,49 @@ class Hue(Plugin):
 			return WebResponseJson({'success': True})
 
 	def parseInitData(self, data):
-		lights = data
+		self.parseLights(data)
+		self.deviceManager.finishedLoading('hue')
+
+	def parseLights(self, lights):
+		oldDevices = self.lights.keys()
 		for i in lights:
+			lightData = lights[i]
 			if 'uniqueid' not in lightData:
 				continue
 			lightId = lightData['uniqueid']
-			light = Light(lightId, i, self)
-			if 'name' in lights[i]:
-				light.setName(lights[i]['name'])
-			if 'state' in lights[i]:
-				state = lights[i]['state']
+			if lightId in oldDevices:
+				# Find any removed lights
+				oldDevices.remove(lightId)
+			name = lightData.get('name', '')
+			if lightId in self.lights:
+				light = self.lights[lightId]
+				if light.name() != name:
+					light.setName(name)
+			else:
+				light = Light(lightId, i, self)
+				self.lights[lightId] = light
+				if 'type' in lightData:
+					light.setType(lightData['type'])
+				self.deviceManager.addDevice(light)
+				light.setName(name)
+			if 'state' in lightData:
+				state = lightData['state']
+				ourState, ourStateValue = light.state()
 				if state['on'] is False:
-					light.setState(Device.TURNOFF)
+					hueState = Device.TURNOFF
+					hueStateValue = ourStateValue
 				elif state['bri'] == 254:
-					light.setState(Device.TURNON)
+					hueState = Device.TURNON
+					hueStateValue = ourStateValue
 				else:
-					light.setState(Device.DIM, state['bri'])
-			if 'type' in lights[i]:
-				light.setType(lights[i]['type'])
-			self.deviceManager.addDevice(light)
-		self.deviceManager.finishedLoading('hue')
+					hueState = Device.DIM
+					hueStateValue = state['bri']
+				if ourState != hueState or ourStateValue != hueStateValue:
+					light.setState(hueState, hueStateValue)
+		for lightId in oldDevices:
+			light = self.lights[lightId]
+			self.deviceManager.removeDevice(light.id())
+			del self.lights[lightId]
 
 	def saveConfig(self):
 		self.setConfig('bridge', {
@@ -267,3 +292,12 @@ class Hue(Plugin):
 
 	def tearDown(self):
 		self.deviceManager.removeDevicesByType('hue')
+
+	def update(self):
+		if self.state != Hue.STATE_AUTHORIZED:
+			# Skip
+			return
+		data = self.doCall('GET', '/api/%s/lights' % self.username)
+		if 0 in data and 'error' in data[0]:
+			return
+		self.parseLights(data)
