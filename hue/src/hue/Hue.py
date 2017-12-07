@@ -114,9 +114,8 @@ class Hue(Plugin):
 		self.bridge = config.get('bridge', '')
 		self.state = Hue.STATE_NO_BRIDGE
 		self.lights = {}
-		if not self.activated:
-			self.ssdp = SSDP(self.context)
-		else:
+		self.ssdp = SSDP(self.context)
+		if self.activated:
 			Application().queue(self.selectBridge, config.get('bridge'))
 		Application().registerScheduledTask(self.update, minutes=1)
 
@@ -141,14 +140,14 @@ class Hue(Plugin):
 				return
 		# Check if username is ok
 		data = self.doCall('GET', '/api/%s/lights' % self.username)
-		if 0 in data and 'error' in data[0]:
-			self.setState(Hue.STATE_UNAUTHORIZED)
-			return
 		self.setState(Hue.STATE_AUTHORIZED)
-		self.parseInitData(data)
+		self.parseLights(data)
+		self.deviceManager.finishedLoading('hue')
 
-	def doCall(self, requestType, endpoint, body=''):
-		conn = httplib.HTTPConnection(self.bridge)
+	def doCall(self, requestType, endpoint, body='', bridge=None):
+		if bridge is None:
+			bridge = self.bridge
+		conn = httplib.HTTPConnection(bridge)
 		try:
 			conn.request(requestType, endpoint, body)
 		except Exception:
@@ -192,11 +191,9 @@ class Hue(Plugin):
 			self.setState(Hue.STATE_NO_BRIDGE)
 			return WebResponseJson({'success': True})
 
-	def parseInitData(self, data):
-		self.parseLights(data)
-		self.deviceManager.finishedLoading('hue')
-
 	def parseLights(self, lights):
+		if isinstance(lights, list) and len(lights) and 'error' in lights[0]:
+			return False
 		oldDevices = self.lights.keys()
 		for i in lights:
 			lightData = lights[i]
@@ -276,11 +273,25 @@ class Hue(Plugin):
 		Server(self.context).webSocketSend('hue', 'status', {'state': self.state})
 
 	def ssdpDeviceFound(self, device):
-		if self.state != Hue.STATE_NO_BRIDGE:
+		if device.type != 'basic:1':
 			return
-		if device.type == 'basic:1':
-			url = urlparse.urlparse(device.location)
+		url = urlparse.urlparse(device.location)
+		if self.state == Hue.STATE_NO_BRIDGE:
 			self.selectBridge(url.netloc)
+		elif self.state == Hue.STATE_AUTHORIZED:
+			if url.netloc == self.bridge:
+				return
+			# Ip to bridge may have has changed
+			data = self.doCall('GET', '/api/%s/lights' % self.username, bridge=url.netloc)
+			try:
+				if 'error' in data[0]:
+					return
+			except Exception as __error:
+				pass
+			# Save new address
+			self.bridge = url.netloc
+			self.saveConfig()
+			self.parseLights(data)
 
 	def selectBridge(self, urlbase):
 		if urlbase == '' or urlbase is None:
@@ -298,6 +309,4 @@ class Hue(Plugin):
 			# Skip
 			return
 		data = self.doCall('GET', '/api/%s/lights' % self.username)
-		if 0 in data and 'error' in data[0]:
-			return
 		self.parseLights(data)
