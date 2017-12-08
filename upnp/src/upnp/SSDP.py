@@ -25,9 +25,9 @@ class SSDPResponse(object):
 	def __init__(self, response):
 		r = httplib.HTTPResponse(self._FakeSocket(response))
 		r.begin()
-		self.location = r.getheader("location")
-		self.usn = r.getheader("usn")
-		self.st = r.getheader("st")
+		self.location = r.getheader("location", '')
+		self.usn = r.getheader("usn", '')
+		self.st = r.getheader("st", '')
 		try:
 			self.cache = r.getheader("cache-control").split("=")[1]
 		except:
