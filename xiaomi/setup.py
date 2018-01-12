@@ -10,6 +10,7 @@ setup(
 	name='Xiaomi',
 	version='1.0',
 	description='Plugin to import devices from Xiaomi Gateway ',
+	long_description=open('long_description.md', 'r').read(),
 	icon='xiaomi.png',
 	color='#69b68a',
 	author='Micke Prag',
