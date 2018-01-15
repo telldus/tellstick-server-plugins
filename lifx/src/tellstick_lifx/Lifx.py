@@ -22,7 +22,7 @@ class LifxDevice(Device):
 		elif action == Device.DIM:
 			self.light.brightness = value/255.0
 			self.light.power = True
-		elif action == Device.RGBW:
+		elif action == Device.RGB:
 			red = (value >> 16) & 0xFF
 			green = (value >> 8) & 0xFF
 			blue = value & 0xFF
@@ -47,7 +47,7 @@ class LifxDevice(Device):
 
 	@staticmethod
 	def methods():
-		return Device.TURNON | Device.TURNOFF | Device.DIM | Device.RGBW
+		return Device.TURNON | Device.TURNOFF | Device.DIM | Device.RGB
 
 class Lifx(Plugin):  # pylint: disable=R0903
 	def __init__(self):
