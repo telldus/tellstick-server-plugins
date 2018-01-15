@@ -63,3 +63,7 @@ class Lifx(Plugin):  # pylint: disable=R0903
 				continue
 			deviceManager.addDevice(device)
 		deviceManager.finishedLoading('lifx')
+
+	def tearDown(self):
+		deviceManager = DeviceManager(self.context)
+		deviceManager.removeDevicesByType('lifx')
