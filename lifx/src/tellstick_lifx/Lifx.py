@@ -32,7 +32,6 @@ class LifxDevice(Device):
 				hue=hue*360.0,
 				saturation=saturation
 			)
-			self.light.power = True
 		else:
 			failure(0)
 			return
