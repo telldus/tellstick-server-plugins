@@ -59,17 +59,10 @@ class TemperatureSensor(Sensor):
 	def setTemperature(self):
 		"""setTempratureSensor value constantly."""
 		while True:
-			# This is dummy data for testing sine wave
-			for temperature in range(0, 101):
-				temperature_in_sine = (((math.sin((temperature * 0.1) + (1/30)) * 100) / 2) + 100) / 2
-				# converting temprature value according to Temprature Birmingham algorithm
-				self.setSensorValue(Sensor.TEMPERATURE, temperature_in_sine, Sensor.SCALE_TEMPERATURE_CELCIUS)
-				time.sleep(15)
-
-			for temperature in range(100, 0, -1):
-				temperature_in_sine = (((math.sin((temperature * 0.1) + (1/30)) * 100) / 2) + 100) / 2
-				# converting temprature value according to Temprature Birmingham algorithm
-				self.setSensorValue(Sensor.TEMPERATURE, temperature_in_sine, Sensor.SCALE_TEMPERATURE_CELCIUS)
+			for xVal in range(0, int(math.pi*2*10)):
+				# This is dummy data for testing sine wave
+				temperature = math.sin(xVal*0.1)*25+50
+				self.setSensorValue(Sensor.TEMPERATURE, temperature, Sensor.SCALE_TEMPERATURE_CELCIUS)
 				time.sleep(15)
 
 # pylint: disable=R0903
