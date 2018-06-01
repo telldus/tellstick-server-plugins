@@ -31,7 +31,7 @@ class TemperatureSensor(Sensor):
 		"""setTempratureSensor value constantly."""
 		xVal = time.time()/60%62
 		# This is dummy data for testing sine wave
-		temperature = math.sin(xVal*0.1)*25+50
+		temperature = round(math.sin(xVal*0.1)*25+50, 2)
 		self.setSensorValue(Sensor.TEMPERATURE, temperature, Sensor.SCALE_TEMPERATURE_CELCIUS)
 
 class Temperature(Plugin):
