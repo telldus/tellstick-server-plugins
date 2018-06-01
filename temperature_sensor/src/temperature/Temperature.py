@@ -14,9 +14,6 @@ class TemperatureSensor(Sensor):
 	localId
 	typeString
 	'''
-	def __init__(self):
-		super(TemperatureSensor, self).__init__()
-
 	@staticmethod
 	def localId():
 		'''Return a unique id number for this sensor. The id should not be
