@@ -14,7 +14,6 @@ class TemperatureSensor(Sensor):
 	_command
 	localId
 	typeString
-	methods
 	'''
 	def __init__(self):
 		super(TemperatureSensor, self).__init__()
@@ -47,11 +46,6 @@ class TemperatureSensor(Sensor):
 		'''Return the sensor type. Only one plugin at a time may export sensors using
 		the same typestring'''
 		return 'temperature'
-
-	@staticmethod
-	def methods():
-		'''Return a bitset of methods this sensor supports'''
-		return Sensor.TURNON | Sensor.TURNOFF
 
 	def updateValue(self):
 		"""setTempratureSensor value constantly."""
