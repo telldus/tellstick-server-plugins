@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import math
-import logging
 import time
 
 from base import Application, Plugin
