@@ -7,7 +7,7 @@ from threading import Thread
 import math
 import time
 
-class TempratureSensor(Sensor):
+class TemperatureSensor(Sensor):
 	'''All sensors exported must subclass Sensor
 
 	Minimal function to reimplement is:
@@ -17,9 +17,9 @@ class TempratureSensor(Sensor):
 	methods
 	'''
 	def __init__(self):
-		super(TempratureSensor,self).__init__()
-		temprature_thread = Thread(target = self.setTemprature, args = (self,))
-		temprature_thread.start()
+		super(TemperatureSensor,self).__init__()
+		temperature_thread = Thread(target = self.setTemperature, args = (self,))
+		temperature_thread.start()
 
 	def _command(self, action, value, success, failure, **kwargs):
 		'''This method is called when someone want to control this sensor
@@ -31,7 +31,7 @@ class TempratureSensor(Sensor):
 
 		This method _must_ call either success or failure
 		'''
-		logging.debug('Sending command %s to temprature sensor', action)
+		logging.debug('Sending command %s to temperature sensor', action)
 		success()
 
 	def localId(self):
@@ -43,30 +43,30 @@ class TempratureSensor(Sensor):
 	def typeString(self):
 		'''Return the sensor type. Only one plugin at a time may export sensors using
 		the same typestring'''
-		return 'temprature'
+		return 'temperature'
 
 	def methods(self):
 		'''Return a bitset of methods this sensor supports'''
 		return Sensor.TURNON | Sensor.TURNOFF
 
-	def setTemprature(self,device):
-		"""setTempratureSensor value constantly."""
+	def setTemperature(self,device):
+		"""setTemperatureSensor value constantly."""
 		while True:
 			#This is dummy data for testing sine wave
-			for temprature in range(0,101):
-				tamprature_in_sine = (((math.sin((temprature * 0.1) + (1/30)) * 100 ) / 2 )+ 100 ) / 2;
-					#converting temprature value according to Temprature Birmingham algorithm
+			for temperature in range(0,101):
+				tamprature_in_sine = (((math.sin((temperature * 0.1) + (1/30)) * 100 ) / 2 )+ 100 ) / 2;
+					#converting temperature value according to Temperature Birmingham algorithm
 				device.setSensorValue(device.TEMPERATURE, tamprature_in_sine, device.SCALE_TEMPERATURE_CELCIUS)
 				time.sleep(15)
 
-			for temprature in range(100,0,-1):
-				tamprature_in_sine = (((math.sin((temprature * 0.1) + (1/30)) * 100 ) / 2 )+ 100 ) / 2;
-					#converting temprature value according to Temprature Birmingham algorithm
+			for temperature in range(100,0,-1):
+				tamprature_in_sine = (((math.sin((temperature * 0.1) + (1/30)) * 100 ) / 2 )+ 100 ) / 2;
+					#converting temperature value according to Temperature Birmingham algorithm
 				device.setSensorValue(device.TEMPERATURE, tamprature_in_sine, device.SCALE_TEMPERATURE_CELCIUS)
 				time.sleep(15)
 
 
-class Temprature(Plugin):
+class Temperature(Plugin):
 	'''This is the plugins main entry point and is a singleton
 	Manage and load the plugins here
 	'''
@@ -76,8 +76,8 @@ class Temprature(Plugin):
 
 		# Load all devices this plugin handles here. Individual settings for the devices
 		# are handled by the devicemanager
-		self.deviceManager.addDevice(TempratureSensor())
+		self.deviceManager.addDevice(TemperatureSensor())
 
 		# When all devices has been loaded we need to call finishedLoading() to tell
 		# the manager we are finished. This clears old devices and caches
-		self.deviceManager.finishedLoading('temprature')
+		self.deviceManager.finishedLoading('temperature')
