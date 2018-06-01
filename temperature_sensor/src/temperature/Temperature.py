@@ -19,8 +19,8 @@ class TemperatureSensor(Sensor):
 	'''
 	def __init__(self):
 		super(TemperatureSensor, self).__init__()
-		temperature_thread = Thread(target=TemperatureSensor.setTemperature, args=(self,))
-		temperature_thread.start()
+		temprature_thread = Thread(target=self.setTemperature)
+		temprature_thread.start()
 
 	@staticmethod
 	def _command(action, value, success, failure, **__kwargs):
@@ -56,21 +56,20 @@ class TemperatureSensor(Sensor):
 		'''Return a bitset of methods this sensor supports'''
 		return Sensor.TURNON | Sensor.TURNOFF
 
-	@staticmethod
-	def setTemperature(device):
-		"""setTemperatureSensor value constantly."""
+	def setTemperature(self):
+		"""setTempratureSensor value constantly."""
 		while True:
-			#This is dummy data for testing sine wave
+			# This is dummy data for testing sine wave
 			for temperature in range(0, 101):
-				tamprature_in_sine = (((math.sin((temperature * 0.1) + (1/30)) * 100) / 2) + 100) / 2
-					#converting temperature value according to Temperature Birmingham algorithm
-				device.setSensorValue(device.TEMPERATURE, tamprature_in_sine, device.SCALE_TEMPERATURE_CELCIUS)
+				temperature_in_sine = (((math.sin((temperature * 0.1) + (1/30)) * 100) / 2) + 100) / 2
+				# converting temprature value according to Temprature Birmingham algorithm
+				self.setSensorValue(Sensor.TEMPERATURE, temperature_in_sine, Sensor.SCALE_TEMPERATURE_CELCIUS)
 				time.sleep(15)
 
 			for temperature in range(100, 0, -1):
-				tamprature_in_sine = (((math.sin((temperature * 0.1) + (1/30)) * 100) / 2) + 100) / 2
-					#converting temperature value according to Temperature Birmingham algorithm
-				device.setSensorValue(device.TEMPERATURE, tamprature_in_sine, device.SCALE_TEMPERATURE_CELCIUS)
+				temperature_in_sine = (((math.sin((temperature * 0.1) + (1/30)) * 100) / 2) + 100) / 2
+				# converting temprature value according to Temprature Birmingham algorithm
+				self.setSensorValue(Sensor.TEMPERATURE, temperature_in_sine, Sensor.SCALE_TEMPERATURE_CELCIUS)
 				time.sleep(15)
 
 # pylint: disable=R0903
