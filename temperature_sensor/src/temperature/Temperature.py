@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from base import Plugin
-from telldus import DeviceManager, Sensor
+import math
 import logging
 from threading import Thread
-import math
 import time
+
+from base import Plugin
+from telldus import DeviceManager, Sensor
 
 class TemperatureSensor(Sensor):
 	'''All sensors exported must subclass Sensor
@@ -17,11 +18,12 @@ class TemperatureSensor(Sensor):
 	methods
 	'''
 	def __init__(self):
-		super(TemperatureSensor,self).__init__()
-		temperature_thread = Thread(target = self.setTemperature, args = (self,))
+		super(TemperatureSensor, self).__init__()
+		temperature_thread = Thread(target=TemperatureSensor.setTemperature, args=(self,))
 		temperature_thread.start()
 
-	def _command(self, action, value, success, failure, **kwargs):
+	@staticmethod
+	def _command(action, value, success, failure, **__kwargs):
 		'''This method is called when someone want to control this sensor
 
 		action is the method id to execute. This could be for instance:
@@ -31,41 +33,47 @@ class TemperatureSensor(Sensor):
 
 		This method _must_ call either success or failure
 		'''
+		del value
+		del failure
 		logging.debug('Sending command %s to temperature sensor', action)
 		success()
 
-	def localId(self):
+	@staticmethod
+	def localId():
 		'''Return a unique id number for this sensor. The id should not be
 		globally unique but only unique for this sensor type.
 		'''
 		return 2
 
-	def typeString(self):
+	@staticmethod
+	def typeString():
 		'''Return the sensor type. Only one plugin at a time may export sensors using
 		the same typestring'''
 		return 'temperature'
 
-	def methods(self):
+	@staticmethod
+	def methods():
 		'''Return a bitset of methods this sensor supports'''
 		return Sensor.TURNON | Sensor.TURNOFF
 
-	def setTemperature(self,device):
+	@staticmethod
+	def setTemperature(device):
 		"""setTemperatureSensor value constantly."""
 		while True:
 			#This is dummy data for testing sine wave
-			for temperature in range(0,101):
-				tamprature_in_sine = (((math.sin((temperature * 0.1) + (1/30)) * 100 ) / 2 )+ 100 ) / 2;
+			for temperature in range(0, 101):
+				tamprature_in_sine = (((math.sin((temperature * 0.1) + (1/30)) * 100) / 2) + 100) / 2
 					#converting temperature value according to Temperature Birmingham algorithm
 				device.setSensorValue(device.TEMPERATURE, tamprature_in_sine, device.SCALE_TEMPERATURE_CELCIUS)
 				time.sleep(15)
 
-			for temperature in range(100,0,-1):
-				tamprature_in_sine = (((math.sin((temperature * 0.1) + (1/30)) * 100 ) / 2 )+ 100 ) / 2;
+			for temperature in range(100, 0, -1):
+				tamprature_in_sine = (((math.sin((temperature * 0.1) + (1/30)) * 100) / 2) + 100) / 2
 					#converting temperature value according to Temperature Birmingham algorithm
 				device.setSensorValue(device.TEMPERATURE, tamprature_in_sine, device.SCALE_TEMPERATURE_CELCIUS)
 				time.sleep(15)
 
-
+# pylint: disable=R0903
 class Temperature(Plugin):
 	'''This is the plugins main entry point and is a singleton
 	Manage and load the plugins here
