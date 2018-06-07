@@ -4,15 +4,15 @@
 from base import Plugin, implements
 from telldus.web import IWebReactHandler
 
-class Welcome(Plugin):
+class Webinterface(Plugin):
 	implements(IWebReactHandler)
 
 	@staticmethod
 	def getReactComponents():
 		return {
-			'welcome': {
-				'title': 'Welcome',
-				'script': 'welcome/welcome.js',
+			'webinterface': {
+				'title': 'Webinterface example',
+				'script': 'webinterface/welcome.js',
 				'tags': ['menu'],
 			}
 		}

@@ -17,13 +17,13 @@ class buildweb(install):
 		install.run(self)
 
 setup(
-	name='Welcome',
+	name='Webinterface',
 	version='0.1',
-	packages=['welcome'],
+	packages=['webinterface'],
 	package_dir = {'':'src'},
 	cmdclass={'install': buildweb},
 	entry_points={ \
-		'telldus.plugins': ['c = welcome:Welcome [cREQ]']
+		'telldus.plugins': ['c = webinterface:Webinterface [cREQ]']
 	},
 	extras_require = dict(cREQ = 'Base>=0.1\nTelldus>=0.1\nTelldusWeb>=0.1')
 )

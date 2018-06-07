@@ -6,20 +6,20 @@ gulp.task('default', ['scripts'], function() {
 });
 
 gulp.task('jsx', function () {
-	return gulp.src('src/welcome/app/**/*.jsx')
+	return gulp.src('src/webinterface/app/**/*.jsx')
 		.pipe(babel({
 			presets: ['es2015', 'stage-0', 'react']
 		}))
-		.pipe(gulp.dest('src/welcome/build'));
+		.pipe(gulp.dest('src/webinterface/build'));
 });
 
 gulp.task('js', function () {
-	return gulp.src('src/welcome/app/**/*.js')
-		.pipe(gulp.dest('src/welcome/build'));
+	return gulp.src('src/webinterface/app/**/*.js')
+		.pipe(gulp.dest('src/webinterface/build'));
 });
 
 gulp.task('scripts', ['jsx', 'js'], function () {
-	return gulp.src('src/welcome/build/welcome/welcome.js')
+	return gulp.src('src/webinterface/build/webinterface/welcome.js')
 		.pipe(requirejsOptimize({
 			//optimize: 'none',
 			paths: {
@@ -27,12 +27,12 @@ gulp.task('scripts', ['jsx', 'js'], function () {
 				'react-mdl': 'empty:',
 				'react-router': 'empty:'
 			},
-			baseUrl: 'src/welcome/build',
-			name: 'welcome/welcome'
+			baseUrl: 'src/webinterface/build',
+			name: 'webinterface/welcome'
 		}))
-		.pipe(gulp.dest('src/welcome/htdocs'));
+		.pipe(gulp.dest('src/webinterface/htdocs'));
 });
 
 gulp.task('watch', ['default'], function() {
-	gulp.watch('src/welcome/app/**/*.jsx', ['default']);
+	gulp.watch('src/webinterface/app/**/*.jsx', ['default']);
 });
