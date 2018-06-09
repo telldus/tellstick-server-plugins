@@ -9,9 +9,10 @@ except ImportError:
 setup(
 	name='Configuration',
 	version='1.0',
-	author='Telldus Technologies',
-	author_email='info.tech@telldus.se',
-	color='#000000',
+	author='ajajul',
+	icon='Setting-icon.png',
+	color='#1597f1',
+	author_email='ajajul9998555036@gmail.com',
 	description='Company Information',
 	packages=['configuration'],
 	long_description="""Use this plugin to get company information through Lua scripts.
