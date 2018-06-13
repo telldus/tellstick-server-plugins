@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from base import configuration, ConfigurationString, Plugin, ConfigurationList, ConfigurationManager
+from base import configuration, ConfigurationString, Plugin, ConfigurationNumber, ConfigurationManager
 
 __name__ = 'configuration'
 
@@ -10,10 +10,12 @@ __name__ = 'configuration'
 		title='Company Name',
 		description='Name of the Company'
 	),
-	contacts = ConfigurationList(
+	contacts = ConfigurationNumber(
 		defaultValue=[],
 		title='company contacts',
-		description='Contacts of the company'
+		description='Contacts of the company',
+		minLength=10,
+		maxLength=10
 	),
 	username = ConfigurationString(
 		defaultValue='',
@@ -23,7 +25,9 @@ __name__ = 'configuration'
 	password = ConfigurationString(
 		defaultValue='',
 		title='Password',
-		description='Password of the company Administrator'
+		description='Password of the company Administrator',
+		minLength=8,
+		maxLength=15
 	)
 )
 class Config(Plugin):
