@@ -15,16 +15,11 @@ class BroadDevice(Device):
 	typeString
 	methods
 	'''
-	def __init__(self):
+	def __init__(self, device=None):
 		super(BroadDevice,self).__init__()
-		self.devices = broadlink.discover(timeout=5)
-		self.device=None
-		for d in self.devices:
-			bytearray.reverse(d.mac)
-			macAddr = codecs.encode(d.mac, 'hex_codec')
-			if(macAddr=="34ea349133ea"):
-				d.auth()
-				self.device = d
+		self.device = device
+		if self.device is not None:
+			self.device.auth()
 
 	def _command(self, action, value, success, failure, **kwargs):
 		'''This method is called when someone want to control this device
@@ -37,10 +32,11 @@ class BroadDevice(Device):
 		This method _must_ call either success or failure
 		'''
 		logging.debug('Sending command %s to Broadlink device', action)
-		if action == 1:
-			self.device.set_power(1)
-		else:
-			self.device.set_power(0)
+		if self.device is not None:
+			if action == 1:
+				self.device.set_power(1)
+			else:
+				self.device.set_power(0)
 		success()
 
 	def localId(self):
@@ -68,7 +64,13 @@ class Broadlink(Plugin):
 
 		# Load all devices this plugin handles here. Individual settings for the devices
 		# are handled by the devicemanager
-		self.deviceManager.addDevice(BroadDevice())
+
+		self.devices = broadlink.discover(timeout=5)
+		for device in self.devices:
+			self.deviceManager.addDevice(BroadDevice(device))
+			
+		if not self.devices:
+			self.deviceManager.addDevice(BroadDevice())
 
 		# When all devices has been loaded we need to call finishedLoading() to tell
 		# the manager we are finished. This clears old devices and caches
