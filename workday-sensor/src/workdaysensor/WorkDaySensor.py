@@ -31,10 +31,10 @@ class WorkDaySensor(Plugin):
     def __init__(self):
 		self.s = Settings('telldus.scheduler')
 		self.timezone = self.s.get('tz', 'UTC')
+		self.device = WorkDay()
 		self.deviceManager = DeviceManager(self.context)
-		self.deviceManager.addDevice(WorkDay())
+		self.deviceManager.addDevice(self.device)
 		self.deviceManager.finishedLoading('workday')
-		self.devices = self.deviceManager.retrieveDevices("workday")
 		Application().registerScheduledTask(self.checkDay, minutes=1, runAtOnce=True)
 
     def checkDay(self):
@@ -51,8 +51,7 @@ class WorkDaySensor(Plugin):
             self.deviceAction(1)
 
     def deviceAction(self,action):
-        for device in self.devices:
-            device.command(action=action)
+        self.device.command(action=action)
 
     def countryCode(self):
         countr_code=""
