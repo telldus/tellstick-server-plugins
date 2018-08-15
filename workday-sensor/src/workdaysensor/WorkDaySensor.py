@@ -51,8 +51,6 @@ class WorkDaySensor(Plugin):
 
     def deviceAction(self,action):
         device = DeviceManager(self.context)
-        print(dir(device))
-        DummyDevice().command(action=action)
         time.sleep(60)
 
     def countryCode(self):
