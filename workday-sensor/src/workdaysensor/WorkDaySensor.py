@@ -12,7 +12,7 @@ import logging
 # pylint: disable=E0211,E0213,W0622,W0312
 
 class WorkDay(Device):
-    
+
 	def __init__(self):
 		super(WorkDay, self).__init__()
 
@@ -32,9 +32,10 @@ class WorkDaySensor(Plugin):
 		self.s = Settings('telldus.scheduler')
 		self.timezone = self.s.get('tz', 'UTC')
 		self.deviceManager = DeviceManager(self.context)
-		self.deviceManager.addDevice(DummyDevice())
-		self.deviceManager.finishedLoading('dummy')
-		Application().registerScheduledTask(self.checkDay, seconds=30, runAtOnce=True)
+		self.deviceManager.addDevice(WorkDay())
+		self.deviceManager.finishedLoading('workday')
+		self.devices = self.deviceManager.retrieveDevices("workday")
+		Application().registerScheduledTask(self.checkDay, minutes=1, runAtOnce=True)
 
     def checkDay(self):
         date_time = datetime.now(pytz.timezone(self.timezone))
@@ -50,7 +51,8 @@ class WorkDaySensor(Plugin):
             self.deviceAction(1)
 
     def deviceAction(self,action):
-        device = DeviceManager(self.context)
+        for device in self.devices:
+            device.command(action=action)
 
     def countryCode(self):
         countr_code=""
