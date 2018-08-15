@@ -11,22 +11,20 @@ import logging
 
 # pylint: disable=E0211,E0213,W0622,W0312
 
-class DummyDevice(Device):
+class WorkDay(Device):
+    
 	def __init__(self):
-		super(DummyDevice,self).__init__()
+		super(WorkDay, self).__init__()
 
 	def _command(self, action, value, success, failure, **kwargs):
-		logging.debug('Sending command %s to dummy device', action)
+    		logging.debug('Sending command %s to dummy device', action)
 		success()
 
 	def localId(self):
-		return 1
-
+    		return 1
+        
 	def typeString(self):
-		return 'dummy'
-
-	def methods(self):
-		return Device.TURNON | Device.TURNOFF
+            return 'workday'
 
 class WorkDaySensor(Plugin):
 
