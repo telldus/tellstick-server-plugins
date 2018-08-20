@@ -9,11 +9,11 @@ from telldus import DeviceManager, Device
 from threading import Thread
 
 class BroadDevice(Device):
-	def __init__(self, uniqueId, device):
+	def __init__(self, device):
 		super(BroadDevice, self).__init__()
 		self.device = device
 		self.device.auth()
-		self._uniqueId = uniqueId
+		self._uniqueId = codecs.encode(device.mac, "hex_codec")
 
 	def _command(self, action, value, success, failure, **kwargs):
 		logging.debug('Sending command %s to Broadlink device', action)
@@ -38,14 +38,13 @@ class BroadDevice(Device):
 class Broadlink(Plugin):
 	def __init__(self):
 		self.deviceManager = DeviceManager(self.context)
-		self.deviceManager.finishedLoading('broadlink')
 		self.devices = None
-		t = Thread(target=self.detectBroadlink)
+		t = Thread(target=self.detectBroadlink, name="Detect Broadlink Devices")
 		t.start()
 
 	def detectBroadlink(self):
 		self.devices = broadlink.discover(timeout=5)
+		print(self.devices)
 		for device in self.devices:
-			bytearray.reverse(device.mac)
-			uid = codecs.encode(device.mac, "hex_codec")
-			self.deviceManager.addDevice(BroadDevice(uid, device))
+			self.deviceManager.addDevice(BroadDevice(device))
+		self.deviceManager.finishedLoading('broadlink')
