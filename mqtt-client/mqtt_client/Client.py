@@ -36,6 +36,10 @@ class FloatWrapper(float):
 		defaultValue=1883,
 		title='Port',
 	),
+	topic=ConfigurationString(
+		defaultValue='telldus',
+		title='Base topic'
+	)
 )
 class Client(Plugin):
 	implements(ISignalObserver)
@@ -62,7 +66,7 @@ class Client(Plugin):
 	@slot('deviceStateChanged')
 	def onDeviceStateChanged(self, device, state, stateValue, origin=None):
 		del origin
-		self.client.publish('telldus/device/%s/state' % (device.id()), json.dumps({
+		self.client.publish('%s/device/%s/state' % (self.config('topic'), device.id()), json.dumps({
 			'state': state,
 			'stateValue': stateValue,
 			#'origin': origin,
@@ -79,7 +83,7 @@ class Client(Plugin):
 
 	@slot('sensorValueUpdated')
 	def onSensorValueUpdated(self, device, valueType, value, scale):
-		self.client.publish('telldus/sensor/%s/value' % (device.id()), json.dumps({
+		self.client.publish('%s/sensor/%s/value' % (self.config('topic'), device.id()), json.dumps({
 			'value': FloatWrapper(value),
 			'valueType': valueType,
 			'scale': scale,
