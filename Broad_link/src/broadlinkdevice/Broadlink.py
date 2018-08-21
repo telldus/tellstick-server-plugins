@@ -35,7 +35,7 @@ class BroadDevice(Device):
 		return Device.TURNON | Device.TURNOFF
 
 	def isSensor(self):
-		return True
+		return hasattr(self.device, 'get_energy')
 
 	def updateValue(self):
 		self.setSensorValue(Device.WATT, float(self.device.get_energy()),
