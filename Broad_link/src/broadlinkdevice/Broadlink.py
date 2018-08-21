@@ -4,7 +4,7 @@ import logging
 import codecs
 import broadlink
 
-from base import Plugin
+from base import Plugin, Application
 from telldus import DeviceManager, Device
 from threading import Thread
 
@@ -14,6 +14,7 @@ class BroadDevice(Device):
 		self.device = device
 		self.device.auth()
 		self._uniqueId = codecs.encode(device.mac, "hex_codec")
+		Application().registerScheduledTask(self.updateValue, seconds=300, runAtOnce=True)
 
 	def _command(self, action, value, success, failure, **kwargs):
 		logging.debug('Sending command %s to Broadlink device', action)
@@ -35,12 +36,20 @@ class BroadDevice(Device):
 	def methods(self):
 		return Device.TURNON | Device.TURNOFF
 
+	def isSensor(self):
+		return True
+
+	def updateValue(self):
+		self.setSensorValue(Device.WATT, float(self.device.get_energy()),
+			Device.SCALE_POWER_WATT
+		)
+
 class Broadlink(Plugin):
 	def __init__(self):
 		self.deviceManager = DeviceManager(self.context)
 		self.devices = None
 		t = Thread(target=self.detectBroadlink, name="Detect Broadlink Devices")
-		t.start()
+		t.start()		
 
 	def detectBroadlink(self):
 		self.devices = broadlink.discover(timeout=5)
