@@ -35,7 +35,9 @@ class BroadDevice(Device):
 		return Device.TURNON | Device.TURNOFF
 
 	def isSensor(self):
-		return hasattr(self.device, 'get_energy')
+		if self.device.devtype in [0x947a, 0x9479]:
+			return True
+
 
 	def updateValue(self):
 		self.setSensorValue(Device.WATT, float(self.device.get_energy()),
@@ -51,8 +53,7 @@ class Broadlink(Plugin):
 
 	def updateValues(self):
 		for device in self.deviceManager.retrieveDevices("broadlink"):
-			if(device.isDevice()):
-    				device.updateValue()
+    			device.updateValue()
 
 	def detectBroadlink(self):
 		self.devices = broadlink.discover(timeout=5)
