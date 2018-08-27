@@ -20,9 +20,11 @@ class WorkDaySensor(Plugin):
         date_time = datetime.now(pytz.timezone(self.timezone))
         try:
             country_holidays = holidays.CountryHoliday(self.countryCode())
+        except self.countryCode() == "":
+            pass
         except:
             country_holidays = holidays.CountryHoliday(countries.get(self.countryCode()).alpha3)
-        if date(date_time.year, date_time.month, date_time.day) in country_holidays and date_time.hour==00 and date_time.minute==01:
+        if date(date_time.year, date_time.month, date_time.day) in country_holidays and date_time.hour==00 and date_time.minute==01 and self.countryCode()!="":
     	    self.deviceAction(2)
         elif date_time.hour==00 and date_time.minute==01:
             self.deviceAction(1)
@@ -35,9 +37,10 @@ class WorkDaySensor(Plugin):
         time.sleep(60)
 
     def countryCode(self):
+        countr_code=""
         for countrycode in pytz.country_timezones:
             timezones = pytz.country_timezones[countrycode]
             for timezone in timezones:
                 if timezone == self.timezone:
-                    return countrycode
-        
+                    countr_code = countrycode
+        return countr_code
