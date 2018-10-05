@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from threading import Thread
-import logging
 import codecs
 import broadlink
 from base import Plugin, Application
@@ -14,8 +13,8 @@ class BroadDevice(Device):
 		self.device.auth()
 		self._uniqueId = codecs.encode(device.mac, "hex_codec")
 
-	def _command(self, action, value, success, failure, **kwargs):
-		logging.debug('Sending command %s to Broadlink device', action)
+	def _command(self, action, value, success, failure, **__kwargs):
+		del value
 		if action == Device.TURNON:
 			self.device.set_power(1)
 		elif action == Device.TURNOFF:
@@ -28,16 +27,17 @@ class BroadDevice(Device):
 	def localId(self):
 		return self._uniqueId
 
-	def typeString(self):
+	@staticmethod
+	def typeString():
 		return 'broadlink'
 
-	def methods(self):
+	@staticmethod
+	def methods():
 		return Device.TURNON | Device.TURNOFF
 
 	def isSensor(self):
 		if self.device.devtype in [0x947a, 0x9479]:
 			return True
-
 
 	def updateValue(self):
 		self.setSensorValue(Device.WATT, float(self.device.get_energy()),
@@ -48,12 +48,12 @@ class Broadlink(Plugin):
 	def __init__(self):
 		self.deviceManager = DeviceManager(self.context)
 		self.devices = None
-		t = Thread(target=self.detectBroadlink, name="Detect Broadlink Devices")
-		t.start()
+		thread = Thread(target=self.detectBroadlink, name="Detect Broadlink Devices")
+		thread.start()
 
 	def updateValues(self):
 		for device in self.deviceManager.retrieveDevices("broadlink"):
-    			device.updateValue()
+			device.updateValue()
 
 	def detectBroadlink(self):
 		self.devices = broadlink.discover(timeout=5)

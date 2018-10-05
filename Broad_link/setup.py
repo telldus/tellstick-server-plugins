@@ -17,9 +17,9 @@ setup(
 		Plugin for controlling broadlink devices
 	""",
 	packages=['broadlinkdevice'],
-	package_dir = {'':'src'},
+	package_dir={'':'src'},
 	entry_points={ \
 		'telldus.startup': ['c = broadlinkdevice:Broadlink [cREQ]']
 	},
-	extras_require = dict(cREQ = 'Base>=0.1\nTelldus>=0.1'),
+	extras_require=dict(cREQ='Base>=0.1\nTelldus>=0.1'),
 )

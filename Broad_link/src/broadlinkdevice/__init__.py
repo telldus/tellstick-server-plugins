@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from Broadlink import Broadlink
+from .Broadlink import Broadlink
