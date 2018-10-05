@@ -1,28 +1,28 @@
 # -*- coding: utf-8 -*-
 
-from base import configuration, ConfigurationString, Plugin, ConfigurationNumber, ConfigurationManager
+from base import configuration, ConfigurationString, Plugin, ConfigurationNumber
 
-__name__ = 'configuration'
+__name__ = 'configuration'  # pylint: disable=W0622
 
 @configuration(
-	companyName = ConfigurationString(
+	companyName=ConfigurationString(
 		defaultValue='',
 		title='Company Name',
 		description='Name of the Company'
 	),
-	contacts = ConfigurationNumber(
+	contacts=ConfigurationNumber(
 		defaultValue=[],
 		title='company contacts',
 		description='Contacts of the company',
 		minLength=10,
 		maxLength=10
 	),
-	username = ConfigurationString(
+	username=ConfigurationString(
 		defaultValue='',
 		title='Username',
 		description='Username of the company Administrator'
 	),
-	password = ConfigurationString(
+	password=ConfigurationString(
 		defaultValue='',
 		title='Password',
 		description='Password of the company Administrator',
