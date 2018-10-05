@@ -10,12 +10,12 @@ __name__ = 'configuration'  # pylint: disable=W0622
 		title='Company Name',
 		description='Name of the Company'
 	),
-	contacts=ConfigurationNumber(
+	founded=ConfigurationNumber(
 		defaultValue=[],
-		title='company contacts',
-		description='Contacts of the company',
-		minLength=10,
-		maxLength=10
+		title='Founded year',
+		description='The year the company was founded',
+		minimum=1900,
+		maximum=2050
 	),
 	username=ConfigurationString(
 		defaultValue='',
@@ -35,7 +35,7 @@ class Config(Plugin):
 	def getCompanyInfo(self):
 		return {
 			'companyName' : self.config('companyName'),
-			'contacts' : self.config('contacts'),
+			'founded' : self.config('founded'),
 			'username' : self.config('username'),
 			'password' : self.config('password'),
 		}
