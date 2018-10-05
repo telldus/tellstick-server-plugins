@@ -17,7 +17,6 @@ setup(
 		Plugin for controlling broadlink devices
 	""",
 	packages=['broadlinkdevice'],
-	package_dir={'':'src'},
 	entry_points={ \
 		'telldus.startup': ['c = broadlinkdevice:Broadlink [cREQ]']
 	},
