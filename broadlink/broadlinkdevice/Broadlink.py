@@ -53,7 +53,6 @@ class Broadlink(Plugin):
 
 	def detectBroadlink(self):
 		self.devices = broadlink.discover(timeout=5)
-		print(self.devices)
 		for device in self.devices:
 			self.deviceManager.addDevice(BroadDevice(device))
 		self.deviceManager.finishedLoading('broadlink')
