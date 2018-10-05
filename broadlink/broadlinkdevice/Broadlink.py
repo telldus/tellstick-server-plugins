@@ -58,6 +58,9 @@ class Broadlink(Plugin):
 		self.deviceManager.finishedLoading('broadlink')
 		Application().registerScheduledTask(self.updateValues, seconds=300, runAtOnce=True)
 
+	def tearDown(self):
+		self.deviceManager.removeDevicesByType('broadlink')
+
 	def updateValues(self):
 		for device in self.deviceManager.retrieveDevices("broadlink"):
 			device.updateValue()
