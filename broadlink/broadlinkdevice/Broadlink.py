@@ -51,10 +51,6 @@ class Broadlink(Plugin):
 		thread = Thread(target=self.detectBroadlink, name="Detect Broadlink Devices")
 		thread.start()
 
-	def updateValues(self):
-		for device in self.deviceManager.retrieveDevices("broadlink"):
-			device.updateValue()
-
 	def detectBroadlink(self):
 		self.devices = broadlink.discover(timeout=5)
 		print(self.devices)
@@ -62,3 +58,7 @@ class Broadlink(Plugin):
 			self.deviceManager.addDevice(BroadDevice(device))
 		self.deviceManager.finishedLoading('broadlink')
 		Application().registerScheduledTask(self.updateValues, seconds=300, runAtOnce=True)
+
+	def updateValues(self):
+		for device in self.deviceManager.retrieveDevices("broadlink"):
+			device.updateValue()
