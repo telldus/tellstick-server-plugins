@@ -7,7 +7,7 @@ except ImportError:
 	from distutils.core import setup
 
 setup(
-	name='WorkDay Sensor',
+	name='Holiday',
 	version='1.0',
 	author='ajajul',
 	author_email='ajajul9998555036@gmail.com',
@@ -16,10 +16,9 @@ setup(
 	long_description="""
 		Plugin that controll on/off of device based on working day.
 	""",
-	packages=['workdaysensor'],
-	package_dir = {'':'src'},
+	packages=['holiday'],
 	entry_points={ \
-		'telldus.startup': ['c = workdaysensor:WorkDaySensor [cREQ]']
+		'telldus.startup': ['c = holiday:Holiday [cREQ]']
 	},
 	extras_require = dict(cREQ = 'Base>=0.1\nTelldus>=0.1'),
 )

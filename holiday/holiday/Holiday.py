@@ -11,10 +11,10 @@ from telldus import DeviceManager, Device
 from iso3166 import countries
 from pluginloader import ConfigurationDropDown
 
-class WorkDay(Device):
+class HolidayDevice(Device):
 	def __init__(self):
-		super(WorkDay, self).__init__()
-		self.setName("Workday")
+		super(HolidayDevice, self).__init__()
+		self.setName("Holiday")
 
 	@staticmethod
 	def deviceType():
@@ -26,7 +26,7 @@ class WorkDay(Device):
 
 	@staticmethod
 	def typeString():
-		return 'workday'
+		return 'holiday'
 
 class Country(object):
 	def __init__(self):
@@ -87,13 +87,13 @@ class Country(object):
 		},
 	)
 )
-class WorkDaySensor(Plugin):
+class Holiday(Plugin):
 	def __init__(self):
 		self.lastCheckedDate = None
-		self.device = WorkDay()
+		self.device = HolidayDevice()
 		deviceManager = DeviceManager(self.context)
 		deviceManager.addDevice(self.device)
-		deviceManager.finishedLoading('workday')
+		deviceManager.finishedLoading('holiday')
 		Application().registerScheduledTask(self.checkDay, minutes=1, runAtOnce=False)
 
 	def checkDay(self):
@@ -112,12 +112,12 @@ class WorkDaySensor(Plugin):
 
 		if today in countryHolidays:
 			self.device.setState(
-				Device.TURNOFF,
+				Device.TURNON,
 				origin=countryHolidays[today],
 				onlyUpdateIfChanged=True
 			)
 		else:
-			self.device.setState(Device.TURNON, onlyUpdateIfChanged=True)
+			self.device.setState(Device.TURNOFF, onlyUpdateIfChanged=True)
 
 	def tearDown(self):
-		DeviceManager(self.context).removeDevicesByType('workday')
+		DeviceManager(self.context).removeDevicesByType('holiday')
