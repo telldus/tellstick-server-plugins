@@ -11,6 +11,7 @@ from pluginloader import ConfigurationDropDown
 class WorkDay(Device):
 	def __init__(self):
 		super(WorkDay, self).__init__()
+		self.setName("Workday")
 
 	@staticmethod
 	def localId():
