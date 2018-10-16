@@ -119,3 +119,5 @@ class WorkDaySensor(Plugin):
 		else:
 			self.device.setState(Device.TURNON, onlyUpdateIfChanged=True)
 
+	def tearDown(self):
+		DeviceManager(self.context).removeDevicesByType('workday')
