@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from datetime import date, datetime
+from datetime import datetime
+import logging
 import pytz
+
 from base import Plugin, Settings, Application, configuration
+from scheduler.base import Scheduler
 import holidays
 from telldus import DeviceManager, Device
 from iso3166 import countries
@@ -32,7 +35,7 @@ class Country(object):
 		self.country_code = self.countryCode()
 
 	def countryCode(self):
-		countr_code = ""
+		countr_code = ''
 		for countrycode in pytz.country_timezones:
 			timezones = pytz.country_timezones[countrycode]
 			for timezone in timezones:
@@ -43,80 +46,76 @@ class Country(object):
 	def getCountry(self):
 		return countries.get(self.country_code).name
 
-
 @configuration(
-	countryList=ConfigurationDropDown(
-		menuList={
-			"Argentina": "Argentina",
-			"Australia": "Australia",
-			"Austria": "Austria",
-			"Belgium": "Belgium",
-			"Canada": "Canada",
-			"Colombia": "Colombia",
-			"Czech": "Czech",
-			"Denmark": "Denmark",
-			"England": "England",
-			"Finland": "Finland",
-			"France": "France",
-			"Germany": "Germany",
-			"Hungary": "Hungary",
-			"India": "India",
-			"Ireland": "Ireland",
-			"Italy": "Italy",
-			"Japan": "Japan",
-			"Mexico": "Mexico",
-			"Netherlands": "Netherlands",
-			"NewZealand": "New Zealand",
-			"Northern Ireland": "Northern Ireland",
-			"Norway": "Norway",
-			"Polish": "Polish",
-			"Portugal": "Portugal",
-			"PortugalExt": "Portugal plus extended days most people have off",
-			"Scotland": "Scotland",
-			"Slovenia": "Slovenia",
-			"Slovakia": "Slovakia",
-			"South Africa": "South Africa",
-			"Spain": "Spain",
-			"Sweden": "Sweden",
-			"Switzerland": "Switzerland",
-			"UnitedKingdom": "UnitedKingdom",
-			"UnitedStates": "UnitedStates",
-			"EuropeanCentralBank": "EuropeanCentralBank",
-			"Wales":"Wales",
+	country=ConfigurationDropDown(
+		title='Country',
+		defaultValue='auto',
+		options={
+			'auto': '- Use country from timezone -',
+			'AR': 'Argentina',
+			'AU': 'Australia',
+			'AT': 'Austria',
+			'BY': 'Belarus',
+			'BE': 'Belgium',
+			'BA': 'Canada',
+			'CO': 'Colombia',
+			'CZ': 'Czech',
+			'DK': 'Denmark',
+			'FI': 'Finland',
+			'FRA': 'France',
+			'DE': 'Germany',
+			'HU': 'Hungary',
+			'IND': 'India',
+			'IE': 'Ireland',
+			'IT': 'Italy',
+			'JP': 'Japan',
+			'MX': 'Mexico',
+			'NL': 'Netherlands',
+			'NZ': 'New Zealand',
+			'NO': 'Norway',
+			'PL': 'Poland',
+			'PT': 'Portugal',
+			'PTE': 'Portugal plus extended days most people have off',
+			'SI': 'Slovenia',
+			'SK': 'Slovakia',
+			'ZA': 'South Africa',
+			'ES': 'Spain',
+			'SE': 'Sweden',
+			'CH': 'Switzerland',
+			'UK': 'United Kingdom',
+			'US': 'United States',
 		},
-		selected=Country().getCountry()
 	)
 )
 class WorkDaySensor(Plugin):
-
 	def __init__(self):
-		self.country = Country()
-		self.selected = self.configuration['countryList'].selected
+		self.lastCheckedDate = None
 		self.device = WorkDay()
-		self.deviceManager = DeviceManager(self.context)
-		self.deviceManager.addDevice(self.device)
-		self.deviceManager.finishedLoading('workday')
-		Application().registerScheduledTask(self.checkDay, minutes=1, runAtOnce=True)
+		deviceManager = DeviceManager(self.context)
+		deviceManager.addDevice(self.device)
+		deviceManager.finishedLoading('workday')
+		Application().registerScheduledTask(self.checkDay, minutes=1, runAtOnce=False)
 
 	def checkDay(self):
-		date_time = datetime.now(pytz.timezone(self.country.timezone))
+		scheduler = Scheduler(self.context)
+		today = datetime.now(pytz.timezone(scheduler.timezone)).date()
+		if self.lastCheckedDate == today:
+			# Check today has already been performed
+			return
+		self.lastCheckedDate = today
+
+		country = self.config('country')
 		try:
-			country_holidays = holidays.CountryHoliday(self.selected)
-		except self.country.country_code == "":
-			pass
+			countryHolidays = holidays.CountryHoliday(country)
 		except Exception as __error:
-			country_holidays = holidays.CountryHoliday(countries.get(self.selected).alpha3)
-		if date(date_time.year, date_time.month, date_time.day) in country_holidays and \
-		   date_time.hour == 00 and \
-		   date_time.minute == 01 and \
-		   self.selected == "":
-			self.deviceAction(2)
-		elif date_time.hour == 00 and date_time.minute == 01:
-			self.deviceAction(1)
+			return
 
-	def deviceAction(self, action):
-		self.device.command(action=action)
+		if today in countryHolidays:
+			self.device.setState(
+				Device.TURNOFF,
+				origin=countryHolidays[today],
+				onlyUpdateIfChanged=True
+			)
+		else:
+			self.device.setState(Device.TURNON, onlyUpdateIfChanged=True)
 
-	def configWasUpdated(self, key, value):
-		if key == 'selected':
-			self.selected = value
