@@ -14,6 +14,10 @@ class WorkDay(Device):
 		self.setName("Workday")
 
 	@staticmethod
+	def deviceType():
+		return Device.TYPE_VIRTUAL
+
+	@staticmethod
 	def localId():
 		return 1
 
