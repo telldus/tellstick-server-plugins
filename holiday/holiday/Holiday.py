@@ -144,6 +144,18 @@ class Holiday(Plugin):
 			Application.printException(error)
 
 		country = self.config('country')
+		if country == 'auto':
+			# Auto lookup country from timezone
+			for countrycode in pytz.country_timezones:
+				timezones = pytz.country_timezones[countrycode]
+				for timezone in timezones:
+					if timezone == now.tzinfo.tzname(None):
+						country = countrycode
+						break
+		if country == 'auto':
+			# The country could not be found from the timezone. Maybe set to UTC?
+			return False, 'Unknown country'
+
 		try:
 			countryHolidays = holidays.CountryHoliday(country)
 		except Exception as __error:
