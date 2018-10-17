@@ -128,6 +128,10 @@ class Holiday(Plugin):
 		else:
 			self.device.setState(Device.TURNOFF, origin=reason, onlyUpdateIfChanged=True)
 
+	def configWasUpdated(self, __key, __value):
+		# Retrigger new check
+		self.lastCheckedDate = None
+
 	def runCheck(self, now):
 		# Check configurations for weekdays first.
 		weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
