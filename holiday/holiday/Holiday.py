@@ -67,7 +67,42 @@ class HolidayDevice(Device):
 			'UK': 'United Kingdom',
 			'US': 'United States',
 		},
-	)
+	),
+	monday=ConfigurationBool(
+		defaultValue=False,
+		sortOrder=1,
+		title='Is monday a holiday?'
+	),
+	tuesday=ConfigurationBool(
+		defaultValue=False,
+		sortOrder=2,
+		title='Is tuesday a holiday?'
+	),
+	wednesday=ConfigurationBool(
+		defaultValue=False,
+		sortOrder=3,
+		title='Is wednesday a holiday?'
+	),
+	thursday=ConfigurationBool(
+		defaultValue=False,
+		sortOrder=4,
+		title='Is thursday a holiday?'
+	),
+	friday=ConfigurationBool(
+		defaultValue=False,
+		sortOrder=5,
+		title='Is friday a holiday?'
+	),
+	saturday=ConfigurationBool(
+		defaultValue=True,
+		sortOrder=6,
+		title='Is saturday a holiday?'
+	),
+	sunday=ConfigurationBool(
+		defaultValue=True,
+		sortOrder=7,
+		title='Is sunday a holiday?'
+	),
 )
 class Holiday(Plugin):
 	def __init__(self):
@@ -94,6 +129,16 @@ class Holiday(Plugin):
 			self.device.setState(Device.TURNOFF, origin=reason, onlyUpdateIfChanged=True)
 
 	def runCheck(self, now):
+		# Check configurations for weekdays first.
+		weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+		try:
+			localHoliday = self.config(weekdays[now.weekday()])
+			if localHoliday:
+				return True, weekdays[now.weekday()]
+		except Exception as error:
+			# This should not happen. Just extra precaution
+			Application.printException(error)
+
 		country = self.config('country')
 		try:
 			countryHolidays = holidays.CountryHoliday(country)
