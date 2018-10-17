@@ -12,7 +12,7 @@ setup(
 	author='ajajul',
 	author_email='ajajul9998555036@gmail.com',
 	color='#2c3e50',
-	description='According to workday on/off the device',
+	description='A device indicating if current day is holiday or not',
 	long_description="""
 		Plugin that controll on/off of device based on working day.
 	""",
@@ -20,5 +20,5 @@ setup(
 	entry_points={ \
 		'telldus.startup': ['c = holiday:Holiday [cREQ]']
 	},
-	extras_require = dict(cREQ = 'Base>=0.1\nTelldus>=0.1'),
+	extras_require=dict(cREQ='Base>=0.1\nTelldus>=0.1'),
 )

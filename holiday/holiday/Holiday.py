@@ -4,12 +4,12 @@ from datetime import datetime
 import logging
 import pytz
 
-from base import Plugin, Settings, Application, configuration
+from base import Plugin, Application, configuration, ConfigurationBool
 from scheduler.base import Scheduler
-import holidays
 from telldus import DeviceManager, Device
-from iso3166 import countries
 from pluginloader import ConfigurationDropDown
+
+import holidays
 
 class HolidayDevice(Device):
 	def __init__(self):
@@ -27,24 +27,6 @@ class HolidayDevice(Device):
 	@staticmethod
 	def typeString():
 		return 'holiday'
-
-class Country(object):
-	def __init__(self):
-		settings = Settings('telldus.scheduler')
-		self.timezone = settings.get('tz', 'UTC')
-		self.country_code = self.countryCode()
-
-	def countryCode(self):
-		countr_code = ''
-		for countrycode in pytz.country_timezones:
-			timezones = pytz.country_timezones[countrycode]
-			for timezone in timezones:
-				if timezone == self.timezone:
-					countr_code = countrycode
-		return countr_code
-
-	def getCountry(self):
-		return countries.get(self.country_code).name
 
 @configuration(
 	country=ConfigurationDropDown(
@@ -98,26 +80,30 @@ class Holiday(Plugin):
 
 	def checkDay(self):
 		scheduler = Scheduler(self.context)
-		today = datetime.now(pytz.timezone(scheduler.timezone)).date()
+		now = datetime.now(pytz.timezone(scheduler.timezone))
+		today = now.date()
 		if self.lastCheckedDate == today:
 			# Check today has already been performed
 			return
 		self.lastCheckedDate = today
 
+		isHoliday, reason = self.runCheck(now)
+		if isHoliday:
+			self.device.setState(Device.TURNON, origin=reason, onlyUpdateIfChanged=True)
+		else:
+			self.device.setState(Device.TURNOFF, origin=reason, onlyUpdateIfChanged=True)
+
+	def runCheck(self, now):
 		country = self.config('country')
 		try:
 			countryHolidays = holidays.CountryHoliday(country)
 		except Exception as __error:
-			return
+			return False, 'Unknown country'
 
+		today = now.date()
 		if today in countryHolidays:
-			self.device.setState(
-				Device.TURNON,
-				origin=countryHolidays[today],
-				onlyUpdateIfChanged=True
-			)
-		else:
-			self.device.setState(Device.TURNOFF, onlyUpdateIfChanged=True)
+			return True, countryHolidays[today]
+		return False, weekdays[now.weekday()]
 
 	def tearDown(self):
 		DeviceManager(self.context).removeDevicesByType('holiday')
