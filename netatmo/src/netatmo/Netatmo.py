@@ -137,6 +137,7 @@ class Netatmo(Plugin):
 			self.sensors[data['_id']] = sensor
 		else:
 			sensor = self.sensors[data['_id']]
+		values = []
 		for dataType in Netatmo.supportedTypes:
 			if dataType not in data['dashboard_data']:
 				continue
@@ -146,7 +147,8 @@ class Netatmo(Plugin):
 				value = round(value / 3.6, 2)  # Data is reported in km/h, we want m/s
 			elif dataType == 'Pressure':
 				value = round(value/10.0)  # Data is reported in mbar, we want kPa
-			sensor.setSensorValue(valueType, value, scale)
+			values.append({'type': valueType, 'value': value, 'scale': scale})
+		sensor.setSensorValues(values)
 		if 'battery_vp' in data and data['type'] in Netatmo.products:
 			product = Netatmo.products[data['type']]
 			battery = 1.0*max(min(data['battery_vp'], product['batteryMax']), product['batteryMin'])
