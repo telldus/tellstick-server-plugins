@@ -12,8 +12,8 @@ setup(
 	description='Plugin to connect to a MQTT broker',
 	icon='mqtt.png',
 	color='#660066',
-	author='Artem Vitiuk',
-	author_email='artem@vitiuk.me',
+	author='Telldus Technologies',
+	author_email='info.tech@telldus.se',
 	category='notifications',
 	packages=['mqtt_client'],
 	entry_points={

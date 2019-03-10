@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import json
+import logging
+import paho.mqtt.client as mqtt
 
 from base import \
 	Plugin, \
@@ -11,7 +13,6 @@ from base import \
 	ISignalObserver, \
 	slot
 from telldus import DeviceManager, Device
-import paho.mqtt.client as mqtt
 
 
 __name__ = 'MQTT'  # pylint: disable=W0622
@@ -104,21 +105,21 @@ class Client(Plugin):
 		}))
 
 	def onConnect(self, client, userdata, flags, result):
-		for device in self.deviceManager.devices:
+		for device in self.deviceManager.retrieveDevices():
 			self.subscribeDevice(device.id())
-		self.subscribeDevice(4)
 		self.client.publish('%s/status' % self.config('topic'), payload='Online', qos=0, retain=True)
 
 	def onMessage(self, client, userdata, msg):
 		try:
 			data = json.loads(str(msg.payload.decode('utf-8')))
-			deviceId = msg.topic.split('/')[3]
-			device = self.deviceManager.device(deviceId)
-			if device and data.get('action'):
+			deviceId = msg.topic.split('/')[2] # _topic_/device/_id_/cmd
+			device = self.deviceManager.device(int(deviceId))
+			if device:
 				device.command(data.get('action'), data.get('value'))
+		except ValueError as e:
+			logging.error('Could not decode JSON payload %s', e)
 		except Exception as e:
-			# TODO: log?
-			print('Couldn\'t decode JSON payload')
+			logging.error('Could not perform a command %s', e)
 
 	def onPublish(self, client, obj, mid):
 		pass
