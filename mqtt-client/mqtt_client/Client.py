@@ -51,7 +51,7 @@ class Client(Plugin):
 	def __init__(self):
 		self.deviceManager = DeviceManager(self.context)
 
-		self.client = mqtt.Client()
+		self.client = mqtt.Client('telldus')
 		self.client.on_connect = self.onConnect
 		self.client.on_message = self.onMessage
 		self.client.on_publish = self.onPublish
@@ -67,12 +67,7 @@ class Client(Plugin):
 	def connect(self):
 		if self.config('username') != '':
 			self.client.username_pw_set(self.config('username'), self.config('password'))
-
-		for device in self.deviceManager.devices:
-			self.subscribeDevice(device.id())
-
 		self.client.will_set('%s/status' % self.config('topic'), payload='Offline', qos=0, retain=True)
-
 		self.client.connect_async(self.config('hostname'), self.config('port'))
 		self.client.loop_start()
 
@@ -102,20 +97,28 @@ class Client(Plugin):
 	@slot('sensorValueUpdated')
 	def onSensorValueUpdated(self, device, valueType, value, scale):
 		self.client.publish('%s/sensor/%s/value' % (self.config('topic'), device.id()), json.dumps({
+			'name': device.name(),
 			'value': FloatWrapper(value),
 			'valueType': valueType,
 			'scale': scale,
 		}))
 
 	def onConnect(self, client, userdata, flags, result):
+		for device in self.deviceManager.devices:
+			self.subscribeDevice(device.id())
+		self.subscribeDevice(4)
 		self.client.publish('%s/status' % self.config('topic'), payload='Online', qos=0, retain=True)
-		pass
 
 	def onMessage(self, client, userdata, msg):
-		# print('message received  ', str(msg.payload.decode('utf-8')),
-		#	   'topic', msg.topic, 'retained ', msg.retain)
-		# print(userdata)
-		pass
+		try:
+			data = json.loads(str(msg.payload.decode('utf-8')))
+			deviceId = msg.topic.split('/')[3]
+			device = self.deviceManager.device(deviceId)
+			if device and data.get('action'):
+				device.command(data.get('action'), data.get('value'))
+		except Exception as e:
+			# TODO: log?
+			print('Couldn\'t decode JSON payload')
 
 	def onPublish(self, client, obj, mid):
 		pass
