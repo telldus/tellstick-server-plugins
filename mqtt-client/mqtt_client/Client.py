@@ -10,14 +10,18 @@ from base import \
 	implements, \
 	ISignalObserver, \
 	slot
+from telldus import DeviceManager, Device
 import paho.mqtt.client as mqtt
 
+
 __name__ = 'MQTT'  # pylint: disable=W0622
+
 
 # On mips 0.1 might be represented as 0.10000000000000001. This is a workaround.
 class FloatWrapper(float):
 	def __repr__(self):
 		return '%.15g' % self
+
 
 @configuration(
 	username=ConfigurationString(
@@ -45,6 +49,8 @@ class Client(Plugin):
 	implements(ISignalObserver)
 
 	def __init__(self):
+		self.deviceManager = DeviceManager(self.context)
+
 		self.client = mqtt.Client()
 		self.client.on_connect = self.onConnect
 		self.client.on_message = self.onMessage
@@ -54,32 +60,44 @@ class Client(Plugin):
 			self.connect()
 
 	def configWasUpdated(self, key, __value):
+		# TODO: handle other changes
 		if key == 'hostname':
 			self.connect()
 
 	def connect(self):
 		if self.config('username') != '':
 			self.client.username_pw_set(self.config('username'), self.config('password'))
+
+		for device in self.deviceManager.devices:
+			self.subscribeDevice(device.id())
+
+		self.client.will_set('%s/status' % self.config('topic'), payload='Offline', qos=0, retain=True)
+
 		self.client.connect_async(self.config('hostname'), self.config('port'))
 		self.client.loop_start()
+
+	def subscribeDevice(self, deviceId):
+		self.client.subscribe('%s/device/%s/cmd' % (self.config('topic'), deviceId))
+
+	def unsubscribeDevice(self, deviceId):
+		self.client.unsubscribe('%s/device/%s/cmd' % (self.config('topic'), deviceId))
+
+	@slot('deviceAdded')
+	def onDeviceAdded(self, device):
+		self.subscribeDevice(device.id())
+
+	@slot('deviceRemoved')
+	def onDeviceRemoved(self, deviceId):
+		self.unsubscribeDevice(deviceId)
 
 	@slot('deviceStateChanged')
 	def onDeviceStateChanged(self, device, state, stateValue, origin=None):
 		del origin
 		self.client.publish('%s/device/%s/state' % (self.config('topic'), device.id()), json.dumps({
+			'name': device.name(),
 			'state': state,
 			'stateValue': stateValue,
-			#'origin': origin,
 		}))
-
-	def onConnect(self, client, userdata, flags, result):
-		pass
-
-	def onMessage(self, client, userdata, msg):
-		pass
-
-	def onPublish(self, client, obj, mid):
-		pass
 
 	@slot('sensorValueUpdated')
 	def onSensorValueUpdated(self, device, valueType, value, scale):
@@ -88,6 +106,19 @@ class Client(Plugin):
 			'valueType': valueType,
 			'scale': scale,
 		}))
+
+	def onConnect(self, client, userdata, flags, result):
+		self.client.publish('%s/status' % self.config('topic'), payload='Online', qos=0, retain=True)
+		pass
+
+	def onMessage(self, client, userdata, msg):
+		# print('message received  ', str(msg.payload.decode('utf-8')),
+		#	   'topic', msg.topic, 'retained ', msg.retain)
+		# print(userdata)
+		pass
+
+	def onPublish(self, client, obj, mid):
+		pass
 
 	def onSubscribe(self, client, obj, mid, granted_qos):
 		pass

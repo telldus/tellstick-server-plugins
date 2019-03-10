@@ -8,15 +8,15 @@ except ImportError:
 
 setup(
 	name='MQTT Client',
-	version='1.0',
+	version='1.1',
 	description='Plugin to connect to a MQTT broker',
 	icon='mqtt.png',
 	color='#660066',
-	author='Telldus Technologies',
-	author_email='info.tech@telldus.se',
+	author='Artem Vitiuk',
+	author_email='artem@vitiuk.me',
 	category='notifications',
 	packages=['mqtt_client'],
-	entry_points={ \
+	entry_points={
 		'telldus.startup': ['c = mqtt_client:Client [cREQ]']
 	},
 	extras_require=dict(cREQ='Base>=0.1\nTelldus>=0.1'),
