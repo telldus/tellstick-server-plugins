@@ -112,7 +112,7 @@ class Client(Plugin):
 	def onMessage(self, client, userdata, msg):
 		try:
 			data = json.loads(str(msg.payload.decode('utf-8')))
-			deviceId = msg.topic.split('/')[2] # _topic_/device/_id_/cmd
+			deviceId = msg.topic.split('/')[-2] # _topic_/device/_id_/cmd
 			device = self.deviceManager.device(int(deviceId))
 			if device:
 				device.command(data.get('action'), data.get('value'))
