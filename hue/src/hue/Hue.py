@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import colorsys
-import httplib
 import json
 import logging
 import threading
 import urlparse
+import httplib
 
 from base import implements, Application, Plugin, mainthread, configuration
 from web.base import IWebRequestHandler, Server, WebResponseJson
