@@ -28,11 +28,11 @@ class Light(Device):
 			msg = '{"on": false}'
 		elif action == Device.DIM:
 			msg = '{"on": true, "bri": %s}' % value
-		elif action == Device.RGBW:
+		elif action == Device.RGB:
 			value = int(value, 16)
-			red = (value >> 24) & 0xFF
-			green = (value >> 16) & 0xFF
-			blue = (value >> 8) & 0xFF
+			red = (value >> 16) & 0xFF
+			green = (value >> 8) & 0xFF
+			blue = value & 0xFF
 			hue, saturation, value = colorsys.rgb_to_hsv(red, green, blue)
 			msg = '{"on": true, "hue": %i, "sat": %i}' % (hue*65535, saturation*254)
 		else:
