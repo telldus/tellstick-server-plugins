@@ -20,7 +20,7 @@ class BuildWeb(bdist_egg):
 
 setup(
 	name='Philips Hue',
-	version='1.1',
+	version='1.2',
 	author='Telldus Technologies AB',
 	author_email='info.tech@telldus.se',
 	category='appliances',
