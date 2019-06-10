@@ -29,7 +29,6 @@ class Light(Device):
 		elif action == Device.DIM:
 			msg = '{"on": true, "bri": %s}' % value
 		elif action == Device.RGB:
-			value = int(value, 16)
 			red = (value >> 16) & 0xFF
 			green = (value >> 8) & 0xFF
 			blue = value & 0xFF
