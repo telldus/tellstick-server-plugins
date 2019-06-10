@@ -32,7 +32,7 @@ class Light(Device):
 			red = (value >> 16) & 0xFF
 			green = (value >> 8) & 0xFF
 			blue = value & 0xFF
-			hue, saturation, value = colorsys.rgb_to_hsv(red, green, blue)
+			hue, saturation, value = colorsys.rgb_to_hsv(float(red), float(green), float(blue))
 			msg = '{"on": true, "hue": %i, "sat": %i}' % (hue*65535, saturation*254)
 		else:
 			failure(0)
