@@ -15,6 +15,7 @@ setup(
 	author='Micke Prag',
 	author_email='micke.prag@telldus.se',
 	category='appliances',
+	ports={'udp':[56700]},
 	packages=['tellstick_lifx'],
 	package_dir={'':'src'},
 	entry_points={ \
