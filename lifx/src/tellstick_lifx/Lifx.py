@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import colorsys
-from threading import Timer
 
-from base import Plugin, mainthread
+from base import Application, Plugin, mainthread
 from telldus import DeviceManager, Device
 import lifx
 
@@ -51,18 +50,25 @@ class LifxDevice(Device):
 class Lifx(Plugin):  # pylint: disable=R0903
 	def __init__(self):
 		self.lifxClient = lifx.Client()
-		Timer(2.0, self.discover).start()
+		self.lights = {}
+		self.loaded = False
+		Application().registerScheduledTask(self.discover, minutes=1, runAtOnce=True)
 
 	@mainthread
 	def discover(self):
 		deviceManager = DeviceManager(self.context)
 		for light in self.lifxClient.get_devices():
+			if light.id in self.lights:
+				continue
 			try:
 				device = LifxDevice(light)
 			except Exception:
 				continue
 			deviceManager.addDevice(device)
-		deviceManager.finishedLoading('lifx')
+			self.lights[light.id] = device
+		if self.loaded is False and len(self.lights) > 0:  # Do not clear if no light is found
+			deviceManager.finishedLoading('lifx')
+			self.loaded = True
 
 	def tearDown(self):
 		deviceManager = DeviceManager(self.context)
