@@ -1,1 +1,1 @@
-python-yr
+git+git://github.com/telldus/python-yr@python2_20#egg=python-yr
