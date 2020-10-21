@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
 import socket
-import httplib
-import StringIO
-from Device import Device
 from threading import Thread
-from base import ObserverCollection, IInterface, Application, Plugin, mainthread
 import logging
+
+from six.moves import http_client
+from six import BytesIO
+
+from base import ObserverCollection, IInterface, Application, Plugin, mainthread
+
+from .Device import Device
+
 
 class ISSDPNotifier(IInterface):
 	def ssdpRootDeviceFound(rootDevice):  # pylint: disable=no-self-argument
@@ -22,12 +26,12 @@ class ISSDPNotifier(IInterface):
 class SSDPResponse(object):
 	ST_ROOT_DEVICE, ST_DEVICE, ST_SERVICE, ST_UNKNOWN = range(4)
 
-	class _FakeSocket(StringIO.StringIO):
+	class _FakeSocket(BytesIO):
 		def makefile(self, *_args, **_kwargs):
 			return self
 
 	def __init__(self, response):
-		httpResponse = httplib.HTTPResponse(self._FakeSocket(response))
+		httpResponse = http_client.HTTPResponse(self._FakeSocket(response))
 		httpResponse.begin()
 		self.location = httpResponse.getheader("location", '')
 		self.usn = httpResponse.getheader("usn", '')
@@ -57,7 +61,7 @@ class SSDP(Plugin):
 		self.rootDevices = {}
 		self.devices = {}
 		Application().registerScheduledTask(
-		    fn=self.startDiscover, minutes=10, runAtOnce=True
+		    self.startDiscover, minutes=10, runAtOnce=True
 		)
 
 	def startDiscover(self):
@@ -78,7 +82,7 @@ class SSDP(Plugin):
 		sock.settimeout(5)
 		sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-		sock.sendto(message.format(*group, st=service), group)
+		sock.sendto(message.format(*group, st=service).encode('utf-8'), group)
 		while True:
 			try:
 				response = SSDPResponse(sock.recv(1024))
