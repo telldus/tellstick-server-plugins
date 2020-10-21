@@ -32,15 +32,16 @@ class Light(Device):
 			red = (value >> 16) & 0xFF
 			green = (value >> 8) & 0xFF
 			blue = value & 0xFF
-			hue, saturation, value = colorsys.rgb_to_hsv(float(red), float(green), float(blue))
-			msg = '{"on": true, "hue": %i, "sat": %i}' % (hue*65535, saturation*254)
+			hue, saturation, value = colorsys.rgb_to_hsv(
+			    float(red), float(green), float(blue)
+			)
+			msg = '{"on": true, "hue": %i, "sat": %i}' % (hue * 65535, saturation * 254)
 		else:
 			failure(0)
 			return
 		retval = self._bridge.doCall(
-			'PUT',
-			'/api/%s/lights/%s/state' % (self._bridge.username, self._nodeId),
-			msg
+		    'PUT', '/api/%s/lights/%s/state' % (self._bridge.username, self._nodeId),
+		    msg
 		)
 		if len(retval) == 0 or 'success' not in retval[0]:
 			failure(0)
@@ -91,11 +92,12 @@ class Light(Device):
 	def setType(self, newType):
 		self._type = newType
 
+
 @configuration(
-	bridge=ConfigurationReactComponent(
-		component='hue',
-		defaultValue={},
-	)
+    bridge=ConfigurationReactComponent(
+        component='hue',
+        defaultValue={},
+    )
 )
 class Hue(Plugin):
 	implements(IWebRequestHandler)
@@ -163,10 +165,10 @@ class Hue(Plugin):
 
 	def getReactComponents(self):  # pylint: disable=R0201
 		return {
-			'hue': {
-				'title': 'Philips Hue',
-				'script': 'hue/hue.js',
-			}
+		    'hue': {
+		        'title': 'Philips Hue',
+		        'script': 'hue/hue.js',
+		    }
 		}
 
 	def matchRequest(self, plugin, path):  # pylint: disable=R0201
@@ -191,7 +193,7 @@ class Hue(Plugin):
 			return WebResponseJson({'success': True})
 
 	def parseLights(self, lights):
-		if isinstance(lights, list) and len(lights) and 'error' in lights[0]:
+		if isinstance(lights, list) and lights and 'error' in lights[0]:
 			return False
 		oldDevices = self.lights.keys()
 		for i in lights:
@@ -234,11 +236,13 @@ class Hue(Plugin):
 			del self.lights[lightId]
 
 	def saveConfig(self):
-		self.setConfig('bridge', {
-			'bridge': self.bridge,
-			'username': self.username,
-			'activated': self.activated,
-		})
+		self.setConfig(
+		    'bridge', {
+		        'bridge': self.bridge,
+		        'username': self.username,
+		        'activated': self.activated,
+		    }
+		)
 
 	def searchNupnp(self):
 		conn = httplib.HTTPSConnection('www.meethue.com')
@@ -281,7 +285,9 @@ class Hue(Plugin):
 			if url.netloc == self.bridge:
 				return
 			# Ip to bridge may have has changed
-			data = self.doCall('GET', '/api/%s/lights' % self.username, bridge=url.netloc)
+			data = self.doCall(
+			    'GET', '/api/%s/lights' % self.username, bridge=url.netloc
+			)
 			try:
 				if 'error' in data[0]:
 					return
