@@ -244,8 +244,8 @@ class Hue(Plugin):
 		)
 
 	def searchNupnp(self):
-		conn = http_client.HTTPSConnection('www.meethue.com')
-		conn.request('GET', '/api/nupnp')
+		conn = http_client.HTTPSConnection('discovery.meethue.com')
+		conn.request('GET', '/')
 		response = conn.getresponse()
 		try:
 			rawData = response.read()
