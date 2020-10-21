@@ -4,8 +4,7 @@ import colorsys
 import json
 import logging
 import threading
-import urlparse
-import httplib
+from six.moves import urllib_parse, http_client
 
 from base import implements, Application, Plugin, mainthread, configuration
 from web.base import IWebRequestHandler, Server, WebResponseJson
@@ -148,7 +147,7 @@ class Hue(Plugin):
 	def doCall(self, requestType, endpoint, body='', bridge=None):
 		if bridge is None:
 			bridge = self.bridge
-		conn = httplib.HTTPConnection(bridge)
+		conn = http_client.HTTPConnection(bridge)
 		try:
 			conn.request(requestType, endpoint, body)
 		except Exception:
@@ -245,7 +244,7 @@ class Hue(Plugin):
 		)
 
 	def searchNupnp(self):
-		conn = httplib.HTTPSConnection('www.meethue.com')
+		conn = http_client.HTTPSConnection('www.meethue.com')
 		conn.request('GET', '/api/nupnp')
 		response = conn.getresponse()
 		try:
@@ -278,7 +277,7 @@ class Hue(Plugin):
 	def ssdpDeviceFound(self, device):
 		if device.type != 'basic:1':
 			return
-		url = urlparse.urlparse(device.location)
+		url = urllib_parse.urlparse(device.location)
 		if self.state == Hue.STATE_NO_BRIDGE:
 			self.selectBridge(url.netloc)
 		elif self.state == Hue.STATE_AUTHORIZED:
