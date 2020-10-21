@@ -2,9 +2,6 @@ var gulp = require('gulp');
 var babel = require("gulp-babel");
 var requirejsOptimize = require('gulp-requirejs-optimize');
 
-gulp.task('default', ['scripts'], function() {
-});
-
 gulp.task("babel", function () {
 	return gulp.src(['src/hue/app/**/*.jsx', 'src/hue/app/**/*.js'])
 		.pipe(babel({
@@ -13,7 +10,7 @@ gulp.task("babel", function () {
 		.pipe(gulp.dest('src/hue/build'));
 });
 
-gulp.task('scripts', ['babel'], function () {
+gulp.task('scripts', gulp.series('babel', function () {
 	return gulp.src('src/hue/build/hue/hue.js')
 		.pipe(requirejsOptimize({
 			paths: {
@@ -28,8 +25,12 @@ gulp.task('scripts', ['babel'], function () {
 			name: 'hue/hue'
 		}))
 		.pipe(gulp.dest('src/hue/htdocs'));
-});
+}));
 
-gulp.task('watch', ['default'], function() {
+gulp.task('default', gulp.series('scripts', function (done) {
+	done();
+}));
+
+gulp.task('watch', gulp.series('default', function () {
 	gulp.watch(['src/hue/app/**/*.jsx', 'src/hue/app/**/*.js'], ['default']);
-});
+}));
