@@ -8,7 +8,7 @@ except ImportError:
 
 setup(
 	name='YR Weather',
-	version='1.1',
+	version='1.2',
 	color='#00b9f1',
 	icon='yr-logo.png',
 	author='Micke Prag',
