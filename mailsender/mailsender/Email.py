@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from base import configuration, ConfigurationString, Plugin, implements
+from base import configuration, ConfigurationNumber, ConfigurationString, Plugin, implements
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import smtplib
@@ -14,10 +14,9 @@ __name__ = 'mailsender'
 		description='Address to the smtpserver',
 		minLength=4
 	),
-	port = ConfigurationString(
-		defaultValue='25',
+	port = ConfigurationNumber(
+		defaultValue=25,
 		title='SMTP server port',
-		minLength=4
 	),
 	username = ConfigurationString(
 		defaultValue='',
