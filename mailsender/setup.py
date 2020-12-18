@@ -8,7 +8,7 @@ except ImportError:
 
 setup(
 	name='Mail sender',
-	version='1.1',
+	version='1.2',
 	icon='email.png',
 	author='Telldus Technologies',
 	author_email='info.tech@telldus.se',
