@@ -12,7 +12,7 @@ __name__ = 'mailsender'
 		defaultValue='',
 		title='SMTP server name',
 		description='Address to the smtpserver',
-		minLength=4
+		# minLength=4
 	),
 	port = ConfigurationNumber(
 		defaultValue=25,
